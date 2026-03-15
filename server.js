@@ -14,11 +14,12 @@ db.run(
 
 // signup function
 app.post("/signup", async (req, res) => {
+  const { username, email, password } = req.body;
   try {
-    const hashedPass = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const query =
       "INSERT INTO users(username, email, password) VALUES (?, ?, ?)";
-    db.run(query, [username, ElementInternals, hashedPass], function (err) {
+    db.run(query, [username, email, hashedPassword], function (err) {
       if (err) {
         console.error(err);
         return res.status(500).send("Error creating user.");
@@ -38,14 +39,17 @@ app.post("/login", async (req, res) => {
       console.error(err);
       return res.status(500).send("Server error");
     }
-    if (!user) returnres.status(400).send("User not found");
+    if (!user) return res.status(400).send("User not found");
 
     // hashing input password to stored hashed password
     const match = await bcrypt.compare(password, user.password);
     if (match) {
       res.send("Login successful");
-    }else{
-        res.status(400).send("Incorrect password");
+    } else {
+      res.status(400).send("Incorrect password");
     }
   });
 });
+
+// starting server
+app.listen(3000, () => console.log("Server running on http://localhost:3000"));
