@@ -13,7 +13,7 @@ db.run(
   "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, email TEXT, password TEXT)",
 );
 db.run(
-  "CREATE TABLE IF NOT EXISTS user_info(id INTEGER PRIMARY KEY AUTOINCREMENT, gender TEXT, weight TEXT "
+  "CREATE TABLE IF NOT EXISTS user_info(id INTEGER PRIMARY KEY AUTOINCREMENT, gender TEXT, weight REAL, height REAL, age INTEGER, activity_level TEXT, FOREIGN KEY(id) REFERENCES users(id))",
 );
 // function to check if user exists already (for signup)
 function userExists(username, email) {
