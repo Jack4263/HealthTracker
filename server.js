@@ -35,8 +35,8 @@ app.post("/signup", async (req, res) => {
 });
 //login function
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
+  const { username, password } = req.body;
+  db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
     if (err) {
       console.error(err);
       return res.status(500).send("Server error");
