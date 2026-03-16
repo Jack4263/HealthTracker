@@ -6,6 +6,7 @@ const db = new sqlite3.Database("HealthDB.db");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
+app.set("view engine", "ejs");
 
 // DATABASE CREATION AND FUNCTIONS ------
 db.run(
@@ -24,7 +25,8 @@ app.post("/signup", async (req, res) => {
         console.error(err);
         return res.status(500).send("Error creating user.");
       }
-      res.send("User created successfully");
+
+      res.render("dashboard", { username: username });
     });
   } catch (error) {
     console.error(error);
@@ -44,7 +46,8 @@ app.post("/login", async (req, res) => {
     // hashing input password to stored hashed password
     const match = await bcrypt.compare(password, user.password);
     if (match) {
-      res.send("Login successful");
+      
+      res.render("dashboard", { username: user.username });
     } else {
       res.status(400).send("Incorrect password");
     }
