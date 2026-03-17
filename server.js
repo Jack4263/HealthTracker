@@ -3,10 +3,18 @@ const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const app = express();
 const db = new sqlite3.Database("HealthDB.db");
+const session = require("express-session");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
 app.set("view engine", "ejs");
+app.use(
+  session({
+    secret: "Health_key_446677",
+    resave: false,
+    saveUninitialized: true,
+  }),
+);
 
 // DATABASE CREATION AND FUNCTIONS ------
 db.run(
@@ -29,6 +37,24 @@ function userExists(username, email) {
   });
 }
 
+function getUserWithProfile(userId) {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT * FROM users WHERE id = ?", [userId], (err, user) => {
+      if (err) return reject(err);
+      if (!user) return reject("User not found");
+      db.get(
+        "SELECT * FROM user_profiles WHERE user_id = ?",
+        [userId],
+        (err, profile) => {
+          if (err) return reject(err);
+          if (!profile) return reject("Profile not found");
+          resolve({ user, profile });
+        },
+      );
+    });
+  });
+}
+
 // signup function
 app.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
@@ -45,7 +71,8 @@ app.post("/signup", async (req, res) => {
         return res.status(500).send("Error creating user.");
       }
       const userId = this.lastID;
-      res.render("set_up_profiles", { username: username, userId: userId });
+      req.session.userId = userId;
+      res.render("set_up_profiles", { username: username });
     });
   } catch (error) {
     console.error(error);
@@ -54,7 +81,6 @@ app.post("/signup", async (req, res) => {
 });
 
 //login function
-// login function
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -71,50 +97,45 @@ app.post("/login", async (req, res) => {
       // check password
       const match = await bcrypt.compare(password, user.password);
       if (!match) return res.status(400).send("Incorrect password");
+      req.session.userId = user.id;
 
       // get user's profile
-      db.get(
-        "SELECT * FROM user_profiles WHERE user_id = ?",
-        [user.id],
-        (err, profile) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).send("Server error");
-          }
-          if (!profile) return res.status(400).send("Profile not found");
-
-          // render dashboard with profile info
-          res.render("dashboard", {
-            username: user.username,
-            gender: profile.gender,
-            age: profile.age,
-            weight: profile.weight,
-            height: profile.height,
-          });
-        },
-      );
+      try {
+        const { user: fullUser, profile } = await getUserWithProfile(user.id);
+        res.render("dashboard", {
+          username: fullUser.username,
+          gender: profile.gender,
+          age: profile.age,
+          weight: profile.weight,
+          height: profile.height,
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send("Server error");
+      }
     },
   );
 });
 
 // set up profile function
 app.post("/set_up_profile", async (req, res) => {
-  const { userId, username, gender, age, weight, height } = req.body;
+  const { gender, age, weight, height } = req.body;
+  const userId = req.session.userId;
   try {
     const query =
       "INSERT INTO user_profiles(user_id, gender, age, weight, height) VALUES (?, ?, ?, ?, ?)";
-    db.run(query, [userId, gender, age, weight, height], function (err) {
+    db.run(query, [userId, gender, age, weight, height], async function (err) {
       if (err) {
         console.error(err);
         return res.status(500).send("Error setting up profile.");
       }
-
+      const { user, profile } = await getUserWithProfile(userId);
       res.render("dashboard", {
-        username: username,
-        gender: gender,
-        age: age,
-        weight: weight,
-        height: height,
+        username: user.username,
+        gender: profile.gender,
+        age: profile.age,
+        weight: profile.weight,
+        height: profile.height,
       });
     });
   } catch (error) {
