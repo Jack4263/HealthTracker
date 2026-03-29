@@ -4,31 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Health Tracker - Login</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
+
   <body>
     <div class="container">
       <h1>Login</h1>
       <p>Please fill in this form to login to your account.</p>
       <hr />
       <form action="/login" method="post">
-        <label for="username"><b>Enter Username</b></label>
+        <label for="username"><b>Username</b></label>
         <input
+          id="username"
           type="text"
           placeholder="Enter Username"
           name="username"
           required
         />
+
         <label for="password"><b>Password</b></label>
         <input
+          id="password"
           type="password"
           placeholder="Enter Password"
           name="password"
           required
         />
-        <button type="submit">Login Up</button>
+
+        <button type="submit">Login</button>
       </form>
       <div>
-        <a href="/index.html">Signup here.</a>
+        <a href="/index.html">Don't have an account? Signup here.</a>
       </div>
     </div>
   </body>
