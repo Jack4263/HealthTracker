@@ -19,13 +19,16 @@ app.post("/signup", async (req, res) => {
   if (!username || !email || !password) {
     return res.status(400).send("All fields are required");
   }
-  
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const query =
       "INSERT INTO users(username, email, password) VALUES (?, ?, ?)";
     db.run(query, [username, email, hashedPassword], function (err) {
       if (err) {
+        if (err.message.includes("UNIQUE")) {
+          return res.status(400).send("Username or email already exists");
+        }
         console.error(err);
         return res.status(500).send("Error creating user.");
       }
