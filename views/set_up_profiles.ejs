@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Tracker - Set up your profile</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome <%= username %>!</h1>
+      <p>Fill in the information below to set up your profile.</p>
+      <hr />
+      <form action="/set_up_profile" method="post">
+        <label for="gender"><b>Gender</b></label>
+        <input type="text" placeholder="Enter Gender" name="gender" required />
+
+        <label for="age"><b>Age</b></label>
+        <input type="text" placeholder="Enter Age" name="age" required />
+
+        <label for="weight"><b>Weight</b></label>
+        <input type="text" placeholder="Enter Weight" name="weight" required />
+
+        <label for="height"><b>Height</b></label>
+        <input type="text" placeholder="Enter Height" name="height" required />
+
+        <button type="submit">Save profile</button>
+      </form>
+    </div>
+  </body>
+</html>
