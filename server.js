@@ -109,7 +109,7 @@ app.post("/login", async (req, res) => {
       // get user's profile
       try {
         const { user: fullUser, profile } = await getUserWithProfile(user.id);
-        res.render("dashboard", {
+        res.redirect("/dashboard", {
           username: fullUser.username,
           gender: profile.gender,
           age: profile.age,
@@ -137,7 +137,7 @@ app.post("/set_up_profile", async (req, res) => {
         return res.status(500).send("Error setting up profile.");
       }
       const { user, profile } = await getUserWithProfile(userId);
-      res.render("dashboard", {
+      res.redirect("/dashboard", {
         username: user.username,
         gender: profile.gender,
         age: profile.age,
@@ -150,6 +150,28 @@ app.post("/set_up_profile", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+
+// dashboard route
+app.get("/dashboard", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.redirect("/login.html");
+  }
+  try {
+    const { user, profile } = await getUserWithProfile(userId);
+    res.redirect("/dashboard", {
+      username: user.username,
+      gender: profile.gender,
+      age: profile.age,
+      weight: profile.weight,
+      height: profile.height,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error loading dashboard");
+  }
+});
+
 
 // starting server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
