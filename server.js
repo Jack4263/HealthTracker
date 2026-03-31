@@ -109,7 +109,7 @@ app.post("/login", async (req, res) => {
       // get user's profile
       try {
         const { user: fullUser, profile } = await getUserWithProfile(user.id);
-        res.redirect("/dashboard", {
+        res.render("dashboard", {
           username: fullUser.username,
           gender: profile.gender,
           age: profile.age,
@@ -137,7 +137,7 @@ app.post("/set_up_profile", async (req, res) => {
         return res.status(500).send("Error setting up profile.");
       }
       const { user, profile } = await getUserWithProfile(userId);
-      res.redirect("/dashboard", {
+      res.render("dashboard", {
         username: user.username,
         gender: profile.gender,
         age: profile.age,
@@ -159,7 +159,7 @@ app.get("/dashboard", async (req, res) => {
   }
   try {
     const { user, profile } = await getUserWithProfile(userId);
-    res.redirect("/dashboard", {
+    res.render("dashboard", {
       username: user.username,
       gender: profile.gender,
       age: profile.age,
@@ -170,6 +170,13 @@ app.get("/dashboard", async (req, res) => {
     console.error(error);
     res.status(500).send("Error loading dashboard");
   }
+});
+
+// logout route
+app.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    res.redirect("/login.html");
+  });
 });
 
 
