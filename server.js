@@ -109,12 +109,14 @@ app.post("/login", async (req, res) => {
       // get user's profile
       try {
         const { user: fullUser, profile } = await getUserWithProfile(user.id);
+        const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
         res.render("dashboard", {
           username: fullUser.username,
           gender: profile.gender,
           age: profile.age,
           weight: profile.weight,
           height: profile.height,
+          bmi: bmi
         });
       } catch (err) {
         console.error(err);
@@ -137,12 +139,14 @@ app.post("/set_up_profile", async (req, res) => {
         return res.status(500).send("Error setting up profile.");
       }
       const { user, profile } = await getUserWithProfile(userId);
+      const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
       res.render("dashboard", {
         username: user.username,
         gender: profile.gender,
         age: profile.age,
         weight: profile.weight,
         height: profile.height,
+        bmi: bmi
       });
     });
   } catch (error) {
@@ -159,16 +163,18 @@ app.get("/dashboard", async (req, res) => {
   }
   try {
     const { user, profile } = await getUserWithProfile(userId);
+    const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
     res.render("dashboard", {
       username: user.username,
       gender: profile.gender,
       age: profile.age,
       weight: profile.weight,
       height: profile.height,
+      bmi: bmi
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error loading dashboard");
+    res.redirect("/login.html");
   }
 });
 
@@ -178,7 +184,6 @@ app.get("/logout", (req, res) => {
     res.redirect("/login.html");
   });
 });
-
 
 // starting server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
