@@ -47,7 +47,7 @@ function getUserWithProfile(userId) {
         [userId],
         (err, profile) => {
           if (err) return reject(err);
-          if (!profile) return reject("Profile not found");
+          if (!profile) return resolve({ user, profile: null });
           resolve({ user, profile });
         },
       );
@@ -109,6 +109,9 @@ app.post("/login", async (req, res) => {
       // get user's profile
       try {
         const { user: fullUser, profile } = await getUserWithProfile(user.id);
+        if (!profile) {
+          return res.redirect("/set_up_profiles");
+        }
         const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
         res.render("dashboard", {
           username: fullUser.username,
