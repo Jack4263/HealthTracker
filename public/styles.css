@@ -59,3 +59,14 @@ a {
     color: #2d89ef;
     text-decoration: none;
 }
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+}
