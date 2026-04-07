@@ -23,6 +23,9 @@ db.run(
 db.run(
   "CREATE TABLE IF NOT EXISTS user_profiles(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, gender TEXT, weight REAL, height REAL, age INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
+db.run('CREATE TABLE IF NOT EXISTS exercise_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, date TEXT, activity TEXT, duration INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))',
+);
+
 // function to check if user exists already (for signup)
 function userExists(username, email) {
   return new Promise((resolve, reject) => {
@@ -186,6 +189,28 @@ app.get("/logout", (req, res) => {
   req.session.destroy((err) => {
     res.redirect("/login.html");
   });
+});
+
+app.get("/exercise", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  db.all("SELECT * FROM exercise_logs WHERE user_id = ?", [req.session.userId], 
+    (err, logs) => {
+      if (err) return res.status(500).send("Error loading exercise logs");
+      res.render("exercise", { logs });
+    }
+  );
+});
+
+app.post ("/exercise", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const { date, activity, duration } = req.body;
+  db.run("INSERT INTO exercise_logs(user_id, date, activity, duration) VALUES (?, ?, ?, ?)",
+    [req.session.userId, date, activity, duration], 
+    (err) => {
+      if (err) return res.status(500).send("Error saving exercise log");
+      res.redirect("/exercise");
+    }
+  );
 });
 
 // starting server
