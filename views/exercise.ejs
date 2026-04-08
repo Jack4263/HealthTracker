@@ -22,6 +22,9 @@
         <label for="duration"><b>Duration (minutes)</b></label>
         <input id="duration" type="number" placeholder="Enter Duration e.g. 30" name="duration" min="1" required />
 
+        <Label for="steps"><b>Steps (optional)</b></label>
+        <input id="steps" type="number" placeholder="Enter Steps e.g. 1000" name="steps" min="0" />
+
         <label for="date"><b>Date</b></label>
         <input id="date" type="date" name="date" required />
 
@@ -37,6 +40,7 @@
               <tr>
                 <th>Activity</th>
                 <th>Duration (minutes)</th>
+                <th>Steps</th>
                 <th>Date</th>
               </tr>
             </thead>
@@ -45,6 +49,7 @@
                 <tr>
                   <td><%= log.activity %></td>
                   <td><%= log.duration %></td>
+                  <td><%= log.steps || 0 %></td>
                   <td><%= log.date %></td>
                 </tr>
               <% }); %>
