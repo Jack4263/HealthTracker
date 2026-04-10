@@ -81,6 +81,13 @@ th, td {
     padding: 10px;
     border: 1px solid #ccc;
     text-align: left;
+    vertical-align: middle;
+}
+
+td form {
+    margin: 0;
+    padding: 0;
+    display: inline;
 }
 
 th {

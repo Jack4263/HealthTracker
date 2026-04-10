@@ -217,5 +217,18 @@ app.post ("/exercise", (req, res) => {
   );
 });
 
+app.post("/exercise/delete/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const { id } = req.params;
+  db.run("DELETE FROM exercise_logs wHERE id = ? AND user_id = ?",
+    [id, req.session.userId],
+    (err) => {
+      if (err) return res.status(500).send("Error deleting exercise log");
+      res.redirect("/exercise");
+    }
+  );
+});
+
+
 // starting server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
