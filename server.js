@@ -26,9 +26,6 @@ db.run(
 db.run(
   'CREATE TABLE IF NOT EXISTS exercise_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, date TEXT, activity TEXT, duration INTEGER, steps INTEGER DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id))',
 );
-db.run(
-  "ALTER TABLE exercise_logs ADD COLUMN steps INTEGER DEFAULT 0"
-);
 
 // function to check if user exists already (for signup)
 function userExists(username, email) {
@@ -220,7 +217,7 @@ app.post ("/exercise", (req, res) => {
 app.post("/exercise/delete/:id", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const { id } = req.params;
-  db.run("DELETE FROM exercise_logs wHERE id = ? AND user_id = ?",
+  db.run("DELETE FROM exercise_logs WHERE id = ? AND user_id = ?",
     [id, req.session.userId],
     (err) => {
       if (err) return res.status(500).send("Error deleting exercise log");
