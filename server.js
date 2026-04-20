@@ -115,6 +115,7 @@ app.post("/login", async (req, res) => {
         const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
         res.render("dashboard", {
           username: fullUser.username,
+          email: fullUser.email,
           gender: profile.gender,
           age: profile.age,
           weight: profile.weight,
@@ -145,6 +146,7 @@ app.post("/set_up_profile", async (req, res) => {
       const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
       res.render("dashboard", {
         username: user.username,
+        email: user.email,
         gender: profile.gender,
         age: profile.age,
         weight: profile.weight,
@@ -169,6 +171,7 @@ app.get("/dashboard", async (req, res) => {
     const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
     res.render("dashboard", {
       username: user.username,
+      email: user.email,
       gender: profile.gender,
       age: profile.age,
       weight: profile.weight,

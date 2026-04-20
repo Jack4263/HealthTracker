@@ -12,7 +12,7 @@
   <img src="/default-profile.png" class="profile-pic" />
 
   <h2><%= username || "User" %></h2>
-  <p>email@example.com</p>
+  <p><%= typeof email !== 'undefined' ? email : 'No email' %></p>
 
   <input type="file" id="uploadPic" />
   </div>
