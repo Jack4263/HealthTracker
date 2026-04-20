@@ -23,6 +23,13 @@ db.run(
 db.run(
   "CREATE TABLE IF NOT EXISTS user_profiles(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, gender TEXT, weight REAL, height REAL, age INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
+db.run(
+  "CREATE TABLE IF NOT EXISTS workout_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, calories_burned REAL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
+);
+
+db.run(
+  "CREATE TABLE IF NOT EXISTS exercise_entries("
+)
 // function to check if user exists already (for signup)
 function userExists(username, email) {
   return new Promise((resolve, reject) => {
