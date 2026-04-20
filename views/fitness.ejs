@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fitness</title>
+</head>
+
+<body>
+  <h1>Fitness</h1>
+
+  <h2>Steps</h2>
+  <p>
+    <% if (typeof steps !== "undefined") { %>
+      You have walked <%= steps %> steps today.
+    <% } else { %>
+      No step data available.
+    <% } %>
+  </p>
+
+  <div>
+    <a href="/workout/new">
+      <button>Log Workout</button>
+    </a>
+
+    <a href="/steps">
+      <button>Log Steps</button>
+    </a>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Workout</title>
+  </head>
+
+  <body>
+    <h1>Workout</h1>
+    <p><b>Date:</b> <%= workout.date %></p>
+
+    <hr />
+
+    <h2>Add Exercise</h2>
+    <form method="POST" action="/exercise">
+      <!-- critical: this ties the exercise to the correct workout -->
+      <input type="hidden" name="workout_id" value="<%= workout.id %>" />
+
+      <div>
+        <label for="exercise_name"><b>Exercise Name</b></label><br />
+        <input
+          id="exercise_name"
+          name="exercise_name"
+          type="text"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="sets"><b>Sets</b></label><br />
+        <input id="sets" name="sets" type="number" min="1"  />
+      </div>
+
+      <div>
+        <label for="reps"><b>Reps</b></label><br />
+        <input id="reps" name="reps" type="number" min="1"  />
+      </div>
+
+      <div>
+        <label for="weight"><b>Weight</b></label><br />
+        <input id="weight" name="weight" type="number" min="0" step="0.5" />
+      </div>
+
+      <br />
+      <button type="submit">Add Exercise</button>
+    </form>
+
+    <hr />
+
+    <h2>Exercises in this workout</h2>
+
+    <% if (!entries || entries.length === 0) { %>
+      <p>No exercises added yet.</p>
+    <% } else { %>
+      <table border="1" cellpadding="6">
+        <thead>
+          <tr>
+            <th>Exercise</th>
+            <th>Sets</th>
+            <th>Reps</th>
+            <th>Weight</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% entries.forEach(e => { %>
+            <tr>
+              <td><%= e.exercise_name %></td>
+              <td><%= e.sets ?? "" %></td>
+              <td><%= e.reps ?? "" %></td>
+              <td><%= e.weight ?? "" %></td>
+              <td>
+                <form method="POST" action="/exercise/delete/<%= e.id %>">
+                  <input type="hidden" name="workout_id" value="<%= workout.id %>" />
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+
+    <hr />
+    <a href="/fitness">Back to Fitness</a>
+  </body>
+</html>

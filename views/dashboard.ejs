@@ -3,41 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <title>Dashboard</title>
-    <link rel="stylesheet" href="/styles.css" >
+    <link rel="stylesheet" href="/styles.css" />
   </head>
 
   <body>
     <div class="container">
-    <h1>Welcome to the dashboard, <%= username %>!</h1>
-    <hr>
-    <label for="gender">Gender: <%= gender %></label>
-    <label for="age">Age: <%= age %></label>
-    <label for="weight">Weight: <%= weight %></label>
-    <label for="height">Height: <%= height %></label>
-    <label>BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %></label>
-    <hr>
+      <h1>Welcome to the dashboard, <%= username %>!</h1>
+      <hr />
+      <label for="gender">Gender: <%= gender %></label>
+      <label for="age">Age: <%= age %></label>
+      <label for="weight">Weight: <%= weight %></label>
+      <label for="height">Height: <%= height %></label>
+      <label
+        >BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy"
+        : bmi < 30 ? "Overweight" : "Obese" %></label
+      >
+      <hr />
 
-    <section>
-      <h2>Diet Tracking</h2>
-      <p>Track your daily food intake and nutritional goals.</p>
-    </section>
-    <hr>
+      <section>
+        <h2>Diet Tracking</h2>
+        <p>Track your daily food intake and nutritional goals.</p>
+      </section>
+      <hr />
 
-    <section>
-      <h2>Exercise Tracking</h2>
-      <p>Log your workouts and monitor your fitness progress.</p>
-      <a href="/exercise">Go to Exercise Tracking Log</a>
-    </section>
-    <hr>
+      <section>
+        <h2>Fitness</h2>
+        <p>Log your workouts and monitor your fitness progress.</p>
+        <a href="/fitness">Go to Fitness</a>
+      </section>
+      <hr />
 
-    <section>
-      <h2>Goals</h2>
-      <p>Set and track your health and fitness goals.</p>
-    </section>
-    <hr>
+      <section>
+        <h2>Goals</h2>
+        <p>Set and track your health and fitness goals.</p>
+      </section>
+      <hr />
 
-    <a href="/logout">Logout</a>
-    
+      <a href="/logout">Logout</a>
     </div>
   </body>
 </html>

@@ -198,40 +198,100 @@ app.get("/logout", (req, res) => {
   });
 });
 
-app.get("/exercise", (req, res) => {
+//fitness/workout/exercise routes
+
+app.get("/fitness", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
-  db.all(
-    "SELECT * FROM exercise_logs WHERE user_id = ?",
-    [req.session.userId],
-    (err, logs) => {
-      if (err) return res.status(500).send("Error loading exercise logs");
-      res.render("exercise", { logs });
+  res.render("fitness");
+});
+
+app.get("/workout/new", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+
+  db.get(
+    "SELECT id FROM workout_logs WHERE user_id = ? AND date = ?",
+    [userId, today],
+    (err, row) => {
+      if (err) return res.status(500).send("Error loading workout");
+
+      // iif a workout already exists today it will reuse that one
+      if (row) return res.redirect(`/workout/${row.id}`);
+      db.run(
+        "INSERT INTO workout_logs(user_id, date, calories_burned) VALUES (?, ?, ?)",
+        [userId, today, null],
+        function (err2) {
+          if (err2) return res.status(500).send("Error creating workout");
+          return res.redirect(`/workout/${this.lastID}`);
+        },
+      );
+    },
+  );
+});
+
+app.get("/workout/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const workoutId = req.params.id;
+  db.get(
+    "SELECT * FROM workout_logs WHERE id = ? AND user_id = ?",
+    [workoutId, userId],
+    (err, workout) => {
+      if (err) return res.status(500).send("Error loading workout");
+      if (!workout) return res.status(404).send("Workout not found");
+
+      db.all(
+        "SELECT * FROM exercise_entries WHERE workout_id = ? ORDER BY id DESC",
+        [workoutId],
+        (err2, entries) => {
+          if (err2) return res.status(500).send("Error loading exercises");
+          res.render("workout", { workout, entries });
+        },
+      );
     },
   );
 });
 
 app.post("/exercise", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
-  const { date, activity, duration, steps } = req.body;
-  db.run(
-    "INSERT INTO exercise_logs(user_id, date, activity, duration, steps) VALUES (?, ?, ?, ?, ?)",
-    [req.session.userId, date, activity, duration, steps || 0],
-    (err) => {
-      if (err) return res.status(500).send("Error saving exercise log");
-      res.redirect("/exercise");
+  const userId = req.session.userId;
+  const { workout_id, exercise_name, sets, reps, weight } = req.body;
+  db.get(
+    "SELECT id FROM workout_logs WHERE id = ? AND user_id = ?",
+    [workout_id, userId],
+    (err, workout) => {
+      if (err) return res.status(500).send("Error checking workout");
+      if (!workout) return res.status(403).send("Not allowed");
+      db.run(
+        `INSERT INTO exercise_entries(workout_id, exercise_name, sets, reps, weight)
+         VALUES (?, ?, ?, ?, ?)`,
+        [workout_id, exercise_name, sets || null, reps || null, weight || null],
+        (err2) => {
+          if (err2) return res.status(500).send("Error saving exercise");
+          return res.redirect(`/workout/${workout_id}`);
+        },
+      );
     },
   );
 });
 
 app.post("/exercise/delete/:id", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
-  const { id } = req.params;
+
+  const userId = req.session.userId;
+  const entryId = req.params.id;
+  const workoutId = req.body.workout_id;
+
   db.run(
-    "DELETE FROM exercise_logs WHERE id = ? AND user_id = ?",
-    [id, req.session.userId],
+    `DELETE FROM exercise_entries
+     WHERE id = ?
+       AND workout_id IN (SELECT id FROM workout_logs WHERE user_id = ?)`,
+    [entryId, userId],
     (err) => {
-      if (err) return res.status(500).send("Error deleting exercise log");
-      res.redirect("/exercise");
+      if (err)
+        return res.status(500).send("There was an error deleting exercise");
+      return res.redirect(`/workout/${workoutId}`);
     },
   );
 });
