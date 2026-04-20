@@ -8,7 +8,15 @@
 
   <body>
     <div class="container">
-    <h1>Welcome to the dashboard, <%= username %>!</h1>
+    <div class="profile-section">
+  <img src="/default-profile.png" class="profile-pic" />
+
+  <h2><%= username || "User" %></h2>
+  <p>email@example.com</p>
+
+  <input type="file" id="uploadPic" />
+  </div>
+    <h1>Welcome to your home page, <%= username %>!</h1>
     <hr>
     <label for="gender">Gender: <%= gender %></label>
     <label for="age">Age: <%= age %></label>
@@ -17,23 +25,7 @@
     <label>BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %></label>
     <hr>
 
-    <section>
-      <h2>Diet Tracking</h2>
-      <p>Track your daily food intake and nutritional goals.</p>
-    </section>
-    <hr>
-
-    <section>
-      <h2>Exercise Tracking</h2>
-      <p>Log your workouts and monitor your fitness progress.</p>
-    </section>
-    <hr>
-
-    <section>
-      <h2>Goals</h2>
-      <p>Set and track your health and fitness goals.</p>
-    </section>
-    <hr>
+    
 
     <a href="/logout">Logout</a>
     
