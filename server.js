@@ -195,5 +195,40 @@ app.get("/logout", (req, res) => {
   });
 });
 
+app.get("/exercise", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  db.all("SELECT * FROM exercise_logs WHERE user_id = ?", [req.session.userId], 
+    (err, logs) => {
+      if (err) return res.status(500).send("Error loading exercise logs");
+      res.render("exercise", { logs });
+    }
+  );
+});
+
+app.post ("/exercise", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const { date, activity, duration, steps } = req.body;
+  db.run("INSERT INTO exercise_logs(user_id, date, activity, duration, steps) VALUES (?, ?, ?, ?, ?)",
+    [req.session.userId, date, activity, duration, steps || 0], 
+    (err) => {
+      if (err) return res.status(500).send("Error saving exercise log");
+      res.redirect("/exercise");
+    }
+  );
+});
+
+app.post("/exercise/delete/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const { id } = req.params;
+  db.run("DELETE FROM exercise_logs WHERE id = ? AND user_id = ?",
+    [id, req.session.userId],
+    (err) => {
+      if (err) return res.status(500).send("Error deleting exercise log");
+      res.redirect("/exercise");
+    }
+  );
+});
+
+
 // starting server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
