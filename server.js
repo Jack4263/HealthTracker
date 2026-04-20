@@ -26,10 +26,13 @@ db.run(
 db.run(
   "CREATE TABLE IF NOT EXISTS workout_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, calories_burned REAL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
-
 db.run(
-  "CREATE TABLE IF NOT EXISTS exercise_entries("
-)
+  "CREATE TABLE IF NOT EXISTS exercise_entries(id INTEGER PRIMARY KEY AUTOINCREMENT, workout_id INTEGER NOT NULL, exercise_name TEXT NOT NULL, sets REAL, reps INTEGER, weight REAL, FOREIGN KEY(workout_id) REFERENCES workout_logs(id))",
+);
+db.run(
+  "CREATE TABLE IF NOT EXISTS steps(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, distance REAL NOT NULL, estimated_steps INTEGER NOT NULL, step_goal INTEGER DEFAULT 10000, achieved INTEGER DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id))",
+);
+
 // function to check if user exists already (for signup)
 function userExists(username, email) {
   return new Promise((resolve, reject) => {
@@ -119,14 +122,14 @@ app.post("/login", async (req, res) => {
         if (!profile) {
           return res.redirect("/set_up_profiles");
         }
-        const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
+        const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
         res.render("dashboard", {
           username: fullUser.username,
           gender: profile.gender,
           age: profile.age,
           weight: profile.weight,
           height: profile.height,
-          bmi: bmi
+          bmi: bmi,
         });
       } catch (err) {
         console.error(err);
@@ -149,14 +152,14 @@ app.post("/set_up_profile", async (req, res) => {
         return res.status(500).send("Error setting up profile.");
       }
       const { user, profile } = await getUserWithProfile(userId);
-      const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
+      const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
       res.render("dashboard", {
         username: user.username,
         gender: profile.gender,
         age: profile.age,
         weight: profile.weight,
         height: profile.height,
-        bmi: bmi
+        bmi: bmi,
       });
     });
   } catch (error) {
@@ -173,14 +176,14 @@ app.get("/dashboard", async (req, res) => {
   }
   try {
     const { user, profile } = await getUserWithProfile(userId);
-    const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
+    const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
     res.render("dashboard", {
       username: user.username,
       gender: profile.gender,
       age: profile.age,
       weight: profile.weight,
       height: profile.height,
-      bmi: bmi
+      bmi: bmi,
     });
   } catch (error) {
     console.error(error);
@@ -197,38 +200,41 @@ app.get("/logout", (req, res) => {
 
 app.get("/exercise", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
-  db.all("SELECT * FROM exercise_logs WHERE user_id = ?", [req.session.userId], 
+  db.all(
+    "SELECT * FROM exercise_logs WHERE user_id = ?",
+    [req.session.userId],
     (err, logs) => {
       if (err) return res.status(500).send("Error loading exercise logs");
       res.render("exercise", { logs });
-    }
+    },
   );
 });
 
-app.post ("/exercise", (req, res) => {
+app.post("/exercise", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const { date, activity, duration, steps } = req.body;
-  db.run("INSERT INTO exercise_logs(user_id, date, activity, duration, steps) VALUES (?, ?, ?, ?, ?)",
-    [req.session.userId, date, activity, duration, steps || 0], 
+  db.run(
+    "INSERT INTO exercise_logs(user_id, date, activity, duration, steps) VALUES (?, ?, ?, ?, ?)",
+    [req.session.userId, date, activity, duration, steps || 0],
     (err) => {
       if (err) return res.status(500).send("Error saving exercise log");
       res.redirect("/exercise");
-    }
+    },
   );
 });
 
 app.post("/exercise/delete/:id", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const { id } = req.params;
-  db.run("DELETE FROM exercise_logs WHERE id = ? AND user_id = ?",
+  db.run(
+    "DELETE FROM exercise_logs WHERE id = ? AND user_id = ?",
     [id, req.session.userId],
     (err) => {
       if (err) return res.status(500).send("Error deleting exercise log");
       res.redirect("/exercise");
-    }
+    },
   );
 });
-
 
 // starting server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
