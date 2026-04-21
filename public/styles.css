@@ -124,9 +124,21 @@ tr:nth-child(even) {
     color: white;
     padding: 10px 15px;
     border-radius: 5px;
+    margin-top: 0;
+    display:inline;
 }
 
 .navbar-links a:hover {
     background-color: #ddd;
     color: black;
+}
+
+.wide {
+    width: 750px;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
 }
