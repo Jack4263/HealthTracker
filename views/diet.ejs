@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Diet</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <nav class="navbar">
+            <ul class="navbar-links">
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/fitness">Fitness</a></li>
+                <li><a href="/workout">Workout</a></li>
+                <li><a href="/diet">Diet</a></li>
+            </ul>
+        </nav>
+        <h1>Diet Plan</h1>
+        <h2>Add food entry</h2>
+        <form method="POST" action="/add-food">
+            <div>
+                <label for="food_name"><b>Food name</b></label><br />
+                <input id ="food_name" name="food_name" type="text" required>
+            </div>
+            <div>
+                <label for="calories"><b>Calories</b></label><br />
+                <input id="calories" name="calories" type="number" min="1" required>
+            </div>
+            <div>
+                <label for="date"><b>Date</b></label><br />
+                <input id="date" name="date" type="date" required>
+            </div>
+            <br />
+            <button type="submit">Add food</button>
+        </form>
+        <h2>Add diet log</h2>
+        <form method="POST" action="/add-log">
+            <div>
+                <label for="date"><b>date</b></label><br />
+                <input id="date" name="date" type="date" required>
+            </div>
+            <div>
+                <label for="total_calories"><b>Total Calories</b></label><br />
+                <input id="total_calories" name="total_calories" type="number" required>
+            </div>
+            <div>
+                <label for="calorie_goal"><b>Calorie Goal</b></label><br />
+                <input id="calorie_goal" name="calorie_goal" type="number" required>
+            </div>
+            <br />
+            <button type="submit">Add diet log</button>
+        </form>
+        <form method="GET" action="/daily-calories">
+            <label for="date"><b>date</b></label><br />
+            <input id="date" name="date" type="date" required>
+            <button type="submit">Calculate daily calories</button>
+        </form>
+        <h2>Daily Calories</h2>
+
+        <% if (total_calories !== null) { %>
+            <p>Calories for <%= date %>: <b><%= total_calories %></b></p>
+        <% } %>
+    </body>
+</html>
