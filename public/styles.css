@@ -140,5 +140,114 @@ tr:nth-child(even) {
 .btn-group {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin-top: 15px;   
+    justify-content: center;
+}
+
+form {
+    width: 95%;
+}
+
+.hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background-color: #fff;
+}
+
+.hero h1 {
+  font-size: 2.5em;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 1.1em;
+  color: #666;
+  margin-bottom: 25px;
+}
+.hero .btn-group a button {
+  padding: 14px 35px;
+  font-size: 1.1em;
+  border-radius: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+  width: auto;
+  margin-top: 0;
+}
+
+.hero .btn-group a button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+  color: white;
+  border: 2px solid #2d89ef ;
+}
+
+.btn-secondary:hover {
+  background-color: #2d89ef;
+  color: white;
+}
+
+.features-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+a.feature-card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 0;
+}
+
+a.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.feature-card h3 {
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+}
+
+.feature-card p {
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 15px;
+}
+
+.feature-link {
+  color: #2d89ef;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.footer {
+  text-align: center;
+  padding: 30px;
+  color: #666;
+  margin-top: 20px;
+}
+
+.footer a {
+  display: inline;
+  margin-top: 0;
 }
