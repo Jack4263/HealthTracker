@@ -1,52 +1,52 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Health Tracker - Signup</title>
+    <title>Health Tracker</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
 
   <body>
-    <div class="container">
+    <div class="hero">
       <h1>Health Tracker</h1>
-      <p>Please fill in this form to create an account.</p>
-      <hr/>
-
-      <form action="/signup" method="post">
-        <label for="username"><b>Username</b></label>
-        <input
-          id="username"
-          type="text"
-          placeholder="Enter Username"
-          name="username"
-          required
-        />
-
-        <label for="email"><b>Email</b></label>
-        <input
-          id="email"
-          type="email"
-          placeholder="Enter Email"
-          name="email"
-          required
-        />
-
-        <label for="password"><b>Password</b></label>
-        <input
-          id="password"
-          type="password"
-          placeholder="Enter Password"
-          name="password"
-          required
-        />
-
-        <button type="submit">Sign Up</button>
-      </form>
-      
-      <div>
-        <a href="/login.html">Already have an account? Login here.</a>
-      </div>
+      <p>Track your health, fitness, and well-being one step at a time.</p>
+      <div class="btn-group">
+      <a href="/signup.html">
+        <button>Sign Up</button></a>
+      <a href="/login.html">
+        <button class="btn-secondary">Login</button></a>
+     </div>
     </div>
+
+    <div class="features-wrapper">
+        <a href="/signup.html" class="feature-card">
+            <div class="feature-icon">🥗</div>
+            <h3>Diet Tracking</h3>
+            <p>Log your meals daily and monitor your nutritional intake.</p>
+            <span class="feature-link">Get Started -></span></a>
+
+            <a href="/signup.html" class="feature-card">
+            <div class="feature-icon">🏋️</div>
+            <h3>Exercise Logging</h3>
+            <p>Record your workouts, track your progress and stay on top of your fitness goals.</p>
+            <span class="feature-link">Get Started -></span></a>
+
+            <a href="/signup.html" class="feature-card">
+            <div class="feature-icon">👟</div>
+            <h3>Step Counter</h3>
+            <p>Keep track of your daily steps and stay motivated to move more.</p>
+            <span class="feature-link">Get Started -></span></a>
+
+             <a href="/signup.html" class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Goal Setting</h3>
+            <p>Set personalized health goals and receive insights to help achieve them.</p>
+            <span class="feature-link">Get Started -></span></a>
+         </div>
+
+    <footer class="footer">
+        <p>Already have an account? <a href="/login.html">Login</a></p>
+    </footer>
   </body>
 </html>

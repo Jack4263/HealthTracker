@@ -211,8 +211,27 @@ app.get("/logout", (req, res) => {
 
 app.get("/fitness", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
-  res.render("fitness");
-});
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+
+  db.get(
+    "SELECT * FROM steps WHERE user_id = ? AND date = ?", 
+    [userId, today], (err, stepsData) => {
+      if (err) return res.status(500).send("Error loading fitness page");
+
+      db.get(
+        "SELECT * FROM workout_logs WHERE user_id = ? AND date = ?",
+        [userId, today],
+        (err2, workout) => {
+          if (err2) return res.status(500).send("Error loading fitness page");
+
+         res.render("fitness", {
+           steps: stepsData ? stepsData.estimated_steps : null,
+           workout: workout || null
+         });
+       });
+    });
+  });
 
 app.get("/workout/new", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");

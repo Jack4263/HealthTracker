@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Workout</title>
+    <link rel="stylesheet" href="/styles.css" />
   </head>
 
   <body>
+    <div class="container wide">
     <nav class="navbar">
       <ul class="navbar-links">
         <li><a href="/dashboard">Dashboard</a></li>
         <li><a href="/fitness">Fitness</a></li>
-        <li><a href="/workout">Workout</a></li>
       </ul>
     </nav>
-  <h1>Fitness</h1>
     <h1>Workout</h1>
     <p><b>Date:</b> <%= workout.date %></p>
 
@@ -25,7 +25,7 @@
       <input type="hidden" name="workout_id" value="<%= workout.id %>" />
 
       <div>
-        <label for="exercise_name"><b>Exercise Name</b></label><br />
+        <label for="exercise_name"><b>Exercise Name:</b></label><br />
         <input
           id="exercise_name"
           name="exercise_name"
@@ -35,17 +35,17 @@
       </div>
 
       <div>
-        <label for="sets"><b>Sets</b></label><br />
+        <label for="sets"><b>Sets:</b></label><br />
         <input id="sets" name="sets" type="number" min="1"  />
       </div>
 
       <div>
-        <label for="reps"><b>Reps</b></label><br />
+        <label for="reps"><b>Reps:</b></label><br />
         <input id="reps" name="reps" type="number" min="1"  />
       </div>
 
       <div>
-        <label for="weight"><b>Weight</b></label><br />
+        <label for="weight"><b>Weight:</b></label><br />
         <input id="weight" name="weight" type="number" min="0" step="0.5" />
       </div>
 

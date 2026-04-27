@@ -3,22 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Health Tracker - Login</title>
+    <title>Health Tracker - Signup</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
 
   <body>
     <div class="container">
-      <h1>Login</h1>
-      <p>Please fill in this form to login to your account.</p>
-      <hr />
-      <form action="/login" method="post">
+      <h1>Health Tracker</h1>
+      <p>Please fill in this form to create an account.</p>
+      <hr/>
+
+      <form action="/signup" method="post">
         <label for="username"><b>Username</b></label>
         <input
           id="username"
           type="text"
           placeholder="Enter Username"
           name="username"
+          required
+        />
+
+        <label for="email"><b>Email</b></label>
+        <input
+          id="email"
+          type="email"
+          placeholder="Enter Email"
+          name="email"
           required
         />
 
@@ -31,10 +41,11 @@
           required
         />
 
-        <button type="submit">Login</button>
+        <button type="submit">Sign Up</button>
       </form>
+      
       <div>
-        <a href="/signup.html">Don't have an account? Signup here.</a>
+        <a href="/login.html">Already have an account? Login here.</a>
       </div>
     </div>
   </body>
