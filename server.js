@@ -367,7 +367,7 @@ app.get("/daily-calories", (req, res) => {
       }
       res.render("diet", {
         date,
-        total_calories: row?.calories || 0
+        total_calories: row?.daily_calories || 0
       });
       
     }
