@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const app = express();
 const db = new sqlite3.Database("HealthDB.db");
 const session = require("express-session");
+const { name } = require("ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static("public"));
@@ -32,7 +33,12 @@ db.run(
 db.run(
   "CREATE TABLE IF NOT EXISTS steps(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, distance REAL NOT NULL, estimated_steps INTEGER NOT NULL, step_goal INTEGER DEFAULT 10000, achieved INTEGER DEFAULT 0, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
-
+db.run(
+  "CREATE TABLE IF NOT EXISTS food_Entries(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, food_name TEXT NOT NULL, date TEXT NOT NULL, calories REAL, FOREIGN KEY(user_id) REFERENCES users(id))",
+);
+db.run(
+  "CREATE TABLE IF NOT EXISTS diet_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, total_calories REAL, calorie_goal REAL, achieved INTEGER CHECK(achieved IN (0, 1)), FOREIGN KEY(user_id) REFERENCES users(id))",
+);
 // function to check if user exists already (for signup)
 function userExists(username, email) {
   return new Promise((resolve, reject) => {
@@ -126,7 +132,7 @@ app.post("/login", async (req, res) => {
         res.render("dashboard", {
           username: fullUser.username,
           email: fullUser.email,
-          gender: profile.gender,
+          gender: formatGender(profile.gender),
           age: profile.age,
           weight: profile.weight,
           height: profile.height,
@@ -157,7 +163,7 @@ app.post("/set_up_profile", async (req, res) => {
       res.render("dashboard", {
         username: user.username,
         email: user.email,
-        gender: profile.gender,
+        gender: formatGender(profile.gender),
         age: profile.age,
         weight: profile.weight,
         height: profile.height,
@@ -182,7 +188,7 @@ app.get("/dashboard", async (req, res) => {
     res.render("dashboard", {
       username: user.username,
       email: user.email,
-      gender: profile.gender,
+      gender: formatGender(profile.gender),
       age: profile.age,
       weight: profile.weight,
       height: profile.height,
@@ -193,6 +199,16 @@ app.get("/dashboard", async (req, res) => {
     res.redirect("/login.html");
   }
 });
+
+function formatGender(gender) {
+  const map = {
+    male: "Male",
+    female: "Female",
+    other: "Other",
+    prefer_not_to_say: "Prefer not to say",
+  };
+  return map[gender] || gender;
+}
 
 // logout route
 app.get("/logout", (req, res) => {
@@ -238,7 +254,7 @@ app.get("/workout/new", (req, res) => {
     (err, row) => {
       if (err) return res.status(500).send("Error loading workout");
 
-      // iif a workout already exists today it will reuse that one
+      // if a workout already exists today it will reuse that one
       if (row) return res.redirect(`/workout/${row.id}`);
       db.run(
         "INSERT INTO workout_logs(user_id, date, calories_burned) VALUES (?, ?, ?)",
@@ -295,6 +311,77 @@ app.post("/exercise", (req, res) => {
         },
       );
     },
+  );
+});
+// diet route
+app.get("/diet", (req, res) => {
+  res.render("diet", {
+    total_calories: null,
+    date: null
+  });
+});
+
+app.post("/add-food", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login");
+  const {food_name, calories, date} = req.body;
+  const userid = req.session.userId;
+  console.log("running food entry")
+  db.run(
+    "INSERT INTO food_entries (user_id, food_name, date, calories) VALUES (?, ?, ?, ?)",
+    [userid, food_name, date, calories],
+    (err) => {
+      if(err){
+          console.error(err);
+      }else{
+        console.log("Food entry added");
+        res.redirect("/diet")
+      }
+    }
+  );
+});
+app.post("/add-log", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login");
+  const {date, total_calories, calorie_goal} = req.body;
+  const userid = req.session.userId;
+  const achieved = total_calories <= calorie_goal ? 1 : 0;
+  console.log("running diet log")
+  db.run(
+    "INSERT INTO diet_logs(user_id, date, total_calories, calorie_goal, achieved) VALUES (?, ?, ?, ?, ?)",
+    [userid, date, total_calories, calorie_goal, achieved],
+    (err) => {
+      if(err){
+        console.error(err);
+      }else{
+        console.log("Diet Log added");
+        res.redirect("/diet")
+      }
+    }
+  );
+});
+app.get("/daily-calories", (req, res) => {
+  const userid = req.session.userId;
+  const date = req.query.date;
+    if (!date) {
+    return res.render("diet", { total: null });
+  }
+  console.log("Running daily calories")
+  db.get(
+    `SELECT SUM(calories) AS daily_calories
+    FROM food_Entries
+    WHERE user_id = ? AND date = ?`,
+    [userid, date],
+    (err, row) => {
+      if(err){
+        console.error(err);
+        res.send("Error")
+      }
+      res.render("diet", {
+        date,
+        total_calories: row?.calories || 0
+      });
+      
+    }
+
   );
 });
 
