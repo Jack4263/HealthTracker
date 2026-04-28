@@ -132,7 +132,7 @@ app.post("/login", async (req, res) => {
         res.render("dashboard", {
           username: fullUser.username,
           email: fullUser.email,
-          gender: profile.gender,
+          gender: formatGender(profile.gender),
           age: profile.age,
           weight: profile.weight,
           height: profile.height,
@@ -163,7 +163,7 @@ app.post("/set_up_profile", async (req, res) => {
       res.render("dashboard", {
         username: user.username,
         email: user.email,
-        gender: profile.gender,
+        gender: formatGender(profile.gender),
         age: profile.age,
         weight: profile.weight,
         height: profile.height,
@@ -188,7 +188,7 @@ app.get("/dashboard", async (req, res) => {
     res.render("dashboard", {
       username: user.username,
       email: user.email,
-      gender: profile.gender,
+      gender: formatGender(profile.gender),
       age: profile.age,
       weight: profile.weight,
       height: profile.height,
@@ -199,6 +199,16 @@ app.get("/dashboard", async (req, res) => {
     res.redirect("/login.html");
   }
 });
+
+function formatGender(gender) {
+  const map = {
+    male: "Male",
+    female: "Female",
+    other: "Other",
+    prefer_not_to_say: "Prefer not to say",
+  };
+  return map[gender] || gender;
+}
 
 // logout route
 app.get("/logout", (req, res) => {
