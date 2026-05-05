@@ -17,7 +17,6 @@ app.use(
   }),
 );
 
-
 // fixes for sqlite3 callback functions to return promises for easier async/await usage
 const dbGet = (sql, params) =>
   new Promise((resolve, reject) => {
@@ -50,7 +49,7 @@ db.run(
   "CREATE TABLE IF NOT EXISTS diet_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, total_calories REAL, calorie_goal REAL, achieved INTEGER CHECK(achieved IN (0, 1)), FOREIGN KEY(user_id) REFERENCES users(id))",
 );
 db.run(
-  "CREATE TABLE IF NOT EXISTS goals(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, goal_type TEXT NOT NULL, target_value REAL NOT NULL, target_date TEXT NOT NULL, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))"
+  "CREATE TABLE IF NOT EXISTS goals(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, goal_type TEXT NOT NULL, target_value REAL NOT NULL, target_date TEXT NOT NULL, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
 // function to check if user exists already (for signup)
 function userExists(username, email) {
@@ -152,7 +151,7 @@ app.post("/login", async (req, res) => {
           bmi: bmi,
           totalSteps: 0,
           totalCalories: 0,
-          workout: null
+          workout: null,
         });
       } catch (err) {
         console.error(err);
@@ -166,16 +165,20 @@ app.post("/login", async (req, res) => {
 app.post("/set_up_profile", async (req, res) => {
   const { gender, age, weight, height } = req.body;
   const userId = req.session.userId;
+
   try {
     const query =
       "INSERT INTO user_profiles(user_id, gender, age, weight, height) VALUES (?, ?, ?, ?, ?)";
+
     db.run(query, [userId, gender, age, weight, height], async function (err) {
       if (err) {
         console.error(err);
         return res.status(500).send("Error setting up profile.");
       }
+
       const { user, profile } = await getUserWithProfile(userId);
       const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
+
       res.render("dashboard", {
         username: user.username,
         email: user.email,
@@ -184,6 +187,9 @@ app.post("/set_up_profile", async (req, res) => {
         weight: profile.weight,
         height: profile.height,
         bmi: bmi,
+        totalSteps: 0,
+        totalCalories: 0,
+        workout: null,
       });
     });
   } catch (error) {
@@ -201,7 +207,7 @@ app.get("/dashboard", async (req, res) => {
   try {
     const { user, profile } = await getUserWithProfile(userId);
     if (!profile) return res.redirect("/set_up_profiles");
-    
+
     const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
     const today = new Date().toISOString().slice(0, 10);
 
@@ -221,7 +227,8 @@ app.get("/dashboard", async (req, res) => {
               "SELECT * FROM workout_logs WHERE user_id = ? AND date = ?",
               [userId, today],
               (err3, workout) => {
-                if (err3) return res.status(500).send("Error loading dashboard");
+                if (err3)
+                  return res.status(500).send("Error loading dashboard");
 
                 res.render("dashboard", {
                   username: user.username,
@@ -233,13 +240,13 @@ app.get("/dashboard", async (req, res) => {
                   bmi: bmi,
                   totalSteps: stepsData?.total_steps || 0,
                   totalCalories: calorieData?.total_calories || 0,
-                  workout: workout || null
+                  workout: workout || null,
                 });
-              }
+              },
             );
-          }
+          },
         );
-      }
+      },
     );
   } catch (error) {
     console.error(error);
@@ -411,7 +418,6 @@ app.post("/exercise", (req, res) => {
   );
 });
 
-
 // goals
 app.get("/goals", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
@@ -432,19 +438,19 @@ app.get("/goals", (req, res) => {
         if (goal.goal_type === "weight") {
           const row = await dbGet(
             "SELECT weight FROM user_profiles WHERE user_id = ?",
-            [userId]
+            [userId],
           );
           currentValue = row?.weight || null;
         } else if (goal.goal_type === "steps") {
           const row = await dbGet(
             "SELECT SUM(estimated_steps) AS total FROM steps WHERE user_id = ? AND date = ?",
-            [userId, today]
+            [userId, today],
           );
           currentValue = row?.total || 0;
         } else if (goal.goal_type === "calories") {
           const row = await dbGet(
             "SELECT SUM(calories) AS total FROM food_Entries WHERE user_id = ? AND date = ?",
-            [userId, today]
+            [userId, today],
           );
           currentValue = row?.total || 0;
         }
@@ -457,12 +463,20 @@ app.get("/goals", (req, res) => {
         // checks if its completed
         if (currentValue !== null) {
           let completed = false;
-          if (goal.goal_type === "weight" && currentValue <= goal.target_value) completed = true;
-          if (goal.goal_type === "steps" && currentValue >= goal.target_value) completed = true;
-          if (goal.goal_type === "calories" && currentValue <= goal.target_value) completed = true;
+          if (goal.goal_type === "weight" && currentValue <= goal.target_value)
+            completed = true;
+          if (goal.goal_type === "steps" && currentValue >= goal.target_value)
+            completed = true;
+          if (
+            goal.goal_type === "calories" &&
+            currentValue <= goal.target_value
+          )
+            completed = true;
 
           if (completed && goal.status !== "overdue") {
-            db.run("UPDATE goals SET status = 'completed' WHERE id = ?", [goal.id]);
+            db.run("UPDATE goals SET status = 'completed' WHERE id = ?", [
+              goal.id,
+            ]);
             goal.status = "completed";
           }
         }
@@ -471,7 +485,7 @@ app.get("/goals", (req, res) => {
       }
 
       res.render("goals", { goals, today });
-    }
+    },
   );
 });
 
@@ -490,7 +504,7 @@ app.post("/goals/add", (req, res) => {
     (err) => {
       if (err) return res.status(500).send("Error saving goal");
       res.redirect("/goals");
-    }
+    },
   );
 });
 
@@ -505,7 +519,7 @@ app.post("/goals/delete/:id", (req, res) => {
     (err) => {
       if (err) return res.status(500).send("Error deleting goal");
       res.redirect("/goals");
-    }
+    },
   );
 });
 
@@ -520,7 +534,7 @@ app.post("/goals/archive/:id", (req, res) => {
     (err) => {
       if (err) return res.status(500).send("Error archiving goal");
       res.redirect("/goals");
-    }
+    },
   );
 });
 
@@ -607,15 +621,16 @@ app.post("/exercise/delete/:id", (req, res) => {
        AND workout_id IN (SELECT id FROM workout_logs WHERE user_id = ?)`,
     [entryId, userId],
     (err) => {
-      if (err) return res.status(500).send("There was an error deleting exercise");
-      
+      if (err)
+        return res.status(500).send("There was an error deleting exercise");
+
       // check if any exercises are left in this workout
       db.get(
         "SELECT COUNT(*) AS count FROM exercise_entries WHERE workout_id = ?",
         [workoutId],
         (err2, row) => {
           if (err2) return res.status(500).send("Error checking exercises");
-          
+
           // if no exercises left, delete the workout log too
           if (row.count === 0) {
             db.run(
@@ -624,17 +639,16 @@ app.post("/exercise/delete/:id", (req, res) => {
               (err3) => {
                 if (err3) return res.status(500).send("Error deleting workout");
                 return res.redirect("/fitness");
-              }
+              },
             );
           } else {
             return res.redirect(`/workout/${workoutId}`);
           }
-        }
+        },
       );
-    }
+    },
   );
 });
-
 
 app.get("/profile", async (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
@@ -668,7 +682,7 @@ app.post("/profile/update", async (req, res) => {
         return res.status(500).send("Error updating profile");
       }
       res.redirect("/profile");
-    }
+    },
   );
 });
 

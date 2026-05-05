@@ -42,9 +42,9 @@
           <th>Workout Today</th>
         </tr>
         <tr>
-          <td><%= totalSteps %> steps</td>
-          <td><%= totalCalories %> kcal</td>
-          <td><%= workout ? "Logged ✓" : "Not logged yet" %></td>
+        <td><%= typeof totalSteps !== "undefined" ? totalSteps : 0 %> steps</td>
+        <td><%= typeof totalCalories !== "undefined" ? totalCalories : 0 %> kcal</td>
+          <td><%= typeof workout !== "undefined" && workout ? "Logged ✓" : "Not logged yet" %></td>
         </tr>
       </table>
       <hr>
