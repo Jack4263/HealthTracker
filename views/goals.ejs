@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Goals</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <ul class="navbar-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/fitness">Fitness</a></li>
+        <li><a href="/diet">Diet</a></li>
+        <li><a href="/goals">Goals</a></li>
+      </ul>
+    </nav>
+
+    <div class="container wide">
+      <h1>My Goals</h1>
+      <hr>
+
+      <h2>Set a New Goal</h2>
+      <form method="POST" action="/goals/add">
+        <label for="goal_type"><b>Goal Type</b></label>
+        <select id="goal_type" name="goal_type" required>
+          <option value="">Select a goal type</option>
+          <option value="weight">Weight (kg)</option>
+          <option value="steps">Daily Steps</option>
+          <option value="calories">Daily Calories (kcal)</option>
+        </select>
+
+        <label for="target_value"><b>Target Value</b></label>
+        <input
+          id="target_value"
+          name="target_value"
+          type="number"
+          min="1"
+          step="0.1"
+          placeholder="e.g. 70"
+          required
+        />
+
+        <label for="target_date"><b>Target Date</b></label>
+        <input
+          id="target_date"
+          name="target_date"
+          type="date"
+          min="<%= today %>"
+          required
+        />
+
+        <button type="submit">Add Goal</button>
+      </form>
+
+      <hr>
+
+      <h2>Active Goals</h2>
+      <% const activeGoals = goals.filter(g => g.status === "active") %>
+      <% if (activeGoals.length === 0) { %>
+        <p>No active goals yet. Set one above!</p>
+      <% } else { %>
+        <table>
+          <tr>
+            <th>Type</th>
+            <th>Target</th>
+            <th>Current</th>
+            <th>Target Date</th>
+            <th>Action</th>
+          </tr>
+          <% activeGoals.forEach(goal => { %>
+            <tr>
+              <td><%= goal.goal_type.charAt(0).toUpperCase() + goal.goal_type.slice(1) %></td>
+              <td><%= goal.target_value %> <%= goal.goal_type === "weight" ? "kg" : goal.goal_type === "steps" ? "steps" : "kcal" %></td>
+              <td><%= goal.currentValue !== null ? goal.currentValue : "No data yet" %></td>
+              <td><%= goal.target_date %></td>
+              <td>
+                <form method="POST" action="/goals/delete/<%= goal.id %>">
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </table>
+      <% } %>
+
+      <hr>
+
+      <h2>Completed Goals</h2>
+      <% const completedGoals = goals.filter(g => g.status === "completed") %>
+      <% if (completedGoals.length === 0) { %>
+        <p>No completed goals yet. Keep going!</p>
+      <% } else { %>
+        <table>
+          <tr>
+            <th>Type</th>
+            <th>Target</th>
+            <th>Target Date</th>
+            <th>Action</th>
+          </tr>
+          <% completedGoals.forEach(goal => { %>
+            <tr>
+              <td><%= goal.goal_type.charAt(0).toUpperCase() + goal.goal_type.slice(1) %></td>
+              <td><%= goal.target_value %> <%= goal.goal_type === "weight" ? "kg" : goal.goal_type === "steps" ? "steps" : "kcal" %></td>
+              <td><%= goal.target_date %></td>
+              <td>
+                <form method="POST" action="/goals/archive/<%= goal.id %>">
+                  <button type="submit">Archive</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </table>
+      <% } %>
+
+      <hr>
+
+      <h2>Overdue Goals</h2>
+      <% const overdueGoals = goals.filter(g => g.status === "overdue") %>
+      <% if (overdueGoals.length === 0) { %>
+        <p>No overdue goals!</p>
+      <% } else { %>
+        <table>
+          <tr>
+            <th>Type</th>
+            <th>Target</th>
+            <th>Target Date</th>
+            <th>Action</th>
+          </tr>
+          <% overdueGoals.forEach(goal => { %>
+            <tr>
+              <td><%= goal.goal_type.charAt(0).toUpperCase() + goal.goal_type.slice(1) %></td>
+              <td><%= goal.target_value %> <%= goal.goal_type === "weight" ? "kg" : goal.goal_type === "steps" ? "steps" : "kcal" %></td>
+              <td><%= goal.target_date %></td>
+              <td>
+                <form method="POST" action="/goals/delete/<%= goal.id %>">
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </table>
+      <% } %>
+
+    </div>
+  </body>
+</html>
