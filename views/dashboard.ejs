@@ -7,16 +7,13 @@
   </head>
 
   <body>
-    <nav class="navbar">
-      <ul class="navbar-links">
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/fitness">Fitness</a></li>
-        <li><a href="/diet">Diet</a></li>
-      </ul>
-    </nav>
-    <div class="container">
-    <div class="profile-section">
-  <img src="/default-profile.png" class="profile-pic" />
+  <nav class="navbar">
+    <ul class="navbar-links">
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/fitness">Fitness</a></li>
+      <li><a href="/diet">Diet</a></li>
+    </ul>
+  </nav>
 
   <h2><%= username || "User" %></h2>
   <p><%= typeof email !== 'undefined' ? email : 'No email' %></p>
@@ -32,9 +29,45 @@
     <label>BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %></label>
     <hr>
 
+    <!-- Profile Info -->
+    <h2>Your Profile</h2>
+    <label>Gender: <%= gender %></label>
+    <label>Age: <%= age %></label>
+    <label>Weight: <%= weight %> kg</label>
+    <label>Height: <%= height %> cm</label>
+    <label>BMI: <%= bmi %> — 
+      <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %>
+    </label>
+    <hr>
 
+    <!-- Today's Summary -->
+    <h2>Today's Summary</h2>
 
-      <a href="/logout">Logout</a>
+    <table>
+      <tr>
+        <th>Steps Today</th>
+        <th>Calories Today</th>
+        <th>Workout Today</th>
+      </tr>
+      <tr>
+        <td><%= totalSteps %> steps</td>
+        <td><%= totalCalories %> kcal</td>
+        <td><%= workout ? "Logged ✓" : "Not logged yet" %></td>
+      </tr>
+    </table>
+
+    <hr>
+
+    <!-- Quick Links -->
+    <h2>Quick Actions</h2>
+    <div class="btn-group">
+      <a href="/diet"><button>Log Meal</button></a>
+      <a href="/fitness"><button>Log Workout</button></a>
+      <a href="/steps"><button>Log Steps</button></a>
     </div>
-  </body>
+
+    <hr>
+    <a href="/logout">Logout</a>
+  </div>
+</body>
 </html>
