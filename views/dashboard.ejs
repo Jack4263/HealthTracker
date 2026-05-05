@@ -27,34 +27,61 @@
       <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %>
     </label>
     <hr>
+      <h2><%= username || "User" %></h2>
+      <p><%= typeof email !== 'undefined' ? email : 'No email' %></p>
 
-    <!-- Today's Summary -->
-    <h2>Today's Summary</h2>
+      <input type="file" id="uploadPic" />
 
-    <table>
-      <tr>
-        <th>Steps Today</th>
-        <th>Calories Today</th>
-        <th>Workout Today</th>
-      </tr>
-      <tr>
-        <td><%= totalSteps %> steps</td>
-        <td><%= totalCalories %> kcal</td>
-        <td><%= workout ? "Logged ✓" : "Not logged yet" %></td>
-      </tr>
-    </table>
+      <h1>Welcome to your home page, <%= username %>!</h1>
+      <hr>
+      <label for="gender">Gender: <%= gender %></label>
+      <label for="age">Age: <%= age %></label>
+      <label for="weight">Weight (kg): <%= weight %></label>
+      <label for="height">Height (cm): <%= height %></label>
+      <label>BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %></label>
+      <hr>
 
-    <hr>
+      <h2>Your Profile</h2>
+      <label>Gender: <%= gender %></label>
+      <label>Age: <%= age %></label>
+      <label>Weight: <%= weight %> kg</label>
+      <label>Height: <%= height %> cm</label>
+      <label>BMI: <%= bmi %> —
+        <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %>
+      </label>
+      <hr>
 
-    <!-- Quick Links -->
-    <h2>Quick Actions</h2>
-    <div class="btn-group">
-      <a href="/diet"><button>Log Meal</button></a>
-      <a href="/fitness"><button>Log Workout</button></a>
-      <a href="/steps"><button>Log Steps</button></a>
+      <h2>Today's Summary</h2>
+
+      <table>
+        <tr>
+          <th>Steps Today</th>
+          <th>Calories Today</th>
+          <th>Workout Today</th>
+        </tr>
+        <tr>
+          <td><%= totalSteps %> steps</td>
+          <td><%= totalCalories %> kcal</td>
+          <td><%= workout ? "Logged ✓" : "Not logged yet" %></td>
+        </tr>
+      </table>
+
+      <hr>
+
+      <h2>Quick Actions</h2>
+      <div class="btn-group">
+        <a href="/diet"><button>Log Meal</button></a>
+        <a href="/fitness"><button>Log Workout</button></a>
+        <a href="/steps"><button>Log Steps</button></a>
+      </div>
+
+      <hr>
+      <a href="/logout">Logout</a>
     </div>
 
     <hr>
     <a href="/logout">Logout</a>
 </body>
+</html>
+  </body>
 </html>
