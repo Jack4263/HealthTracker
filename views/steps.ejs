@@ -25,10 +25,10 @@
       <input type="hidden" name="steps_id" value="<%= steps.id %>" />
 
       <div>
-        <label for="steps_distance"><b>Distance:</b></label><br />
+        <label for="distance"><b>Distance (meters):</b></label><br />
         <input
-          id="steps_distance"
-          name="exercise_name"
+          id="distance"
+          name="distance"
           type="text"
           required
         />
@@ -44,39 +44,6 @@
       <button type="submit">Log Steps</button>
     </form>
 
-    <hr />
-
-    <h2>Step Logs Today</h2>
-
-    <% if (!entries || entries.length === 0) { %>
-      <p>No steps logged today</p>
-    <% } else { %>
-      <table border="1" cellpadding="6">
-        <thead>
-          <tr>
-            <th>Estimated Steps</th>
-            <th>Distance</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% entries.forEach(steps => { %>
-            <tr>
-              <td><%= steps.estimated %></td>
-              <td><%= steps.distance ?? "" %></td>
-
-              <td>
-                <form method="POST" action="/steps/delete/<%= steps.id %>">
-                  <input type="hidden" name="steps_id" value="<%= steps.id %>" />
-                  <button type="submit">Delete</button>
-                </form>
-              </td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    <% } %>
-
-    <hr />
     <a href="/fitness">Back to Fitness</a>
   </body>
 </html>
