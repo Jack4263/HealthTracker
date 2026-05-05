@@ -13,22 +13,9 @@
       <li><a href="/fitness">Fitness</a></li>
       <li><a href="/diet">Diet</a></li>
       <li><a href="/goals">Goals</a></li>
+      <li><a href="/profile">Profile</a></li>
     </ul>
   </nav>
-
-  <h2><%= username || "User" %></h2>
-  <p><%= typeof email !== 'undefined' ? email : 'No email' %></p>
-
-  <input type="file" id="uploadPic" />
-  </div>
-    <h1>Welcome to your home page, <%= username %>!</h1>
-    <hr>
-    <label for="gender">Gender: <%= gender %></label>
-    <label for="age">Age: <%= age %></label>
-    <label for="weight">Weight (kg): <%= weight %></label>
-    <label for="height">Height (cm): <%= height %></label>
-    <label>BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %></label>
-    <hr>
 
     <!-- Profile Info -->
     <h2>Your Profile</h2>
@@ -69,6 +56,5 @@
 
     <hr>
     <a href="/logout">Logout</a>
-  </div>
 </body>
 </html>
