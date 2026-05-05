@@ -17,6 +17,8 @@ app.use(
   }),
 );
 
+
+// fixes for sqlite3 callback functions to return promises for easier async/await usage
 const dbGet = (sql, params) =>
   new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => {
