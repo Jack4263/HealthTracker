@@ -635,5 +635,42 @@ app.post("/exercise/delete/:id", (req, res) => {
   );
 });
 
+
+app.get("/profile", async (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  try {
+    const { user, profile } = await getUserWithProfile(req.session.userId);
+    res.render("profile", {
+      username: user.username,
+      email: user.email,
+      gender: profile.gender,
+      age: profile.age,
+      weight: profile.weight,
+      height: profile.height,
+    });
+  } catch (error) {
+    console.error(error);
+    res.redirect("/dashboard");
+  }
+});
+
+app.post("/profile/update", async (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const { gender, age, weight, height } = req.body;
+  const userId = req.session.userId;
+
+  db.run(
+    "UPDATE user_profiles SET gender = ?, age = ?, weight = ?, height = ? WHERE user_id = ?",
+    [gender, age, weight, height, userId],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error updating profile");
+      }
+      res.redirect("/profile");
+    }
+  );
+});
+
 // starting server
 app.listen(3000, () => console.log("Server running on http://localhost:3000"));
