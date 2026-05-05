@@ -217,6 +217,9 @@ app.get("/logout", (req, res) => {
   });
 });
 
+
+
+
 //fitness/workout/exercise routes
 
 app.get("/fitness", (req, res) => {
@@ -313,6 +316,9 @@ app.post("/exercise", (req, res) => {
     },
   );
 });
+
+
+
 // diet route
 app.get("/diet", (req, res) => {
   res.render("diet", {
