@@ -189,9 +189,9 @@ form {
 
 .btn-group a button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-    border: 2px solid white !important;
-    text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.4);
+  border: 2px solid white !important;
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.4);
+  background-color: #2d89ef;
 }
 
 .btn-secondary {
