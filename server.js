@@ -147,6 +147,9 @@ app.post("/login", async (req, res) => {
           weight: profile.weight,
           height: profile.height,
           bmi: bmi,
+          totalSteps: 0,
+          totalCalories: 0,
+          workout: null
         });
       } catch (err) {
         console.error(err);
@@ -194,16 +197,47 @@ app.get("/dashboard", async (req, res) => {
   }
   try {
     const { user, profile } = await getUserWithProfile(userId);
+    if (!profile) return res.redirect("/set_up_profiles");
+    
     const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
-    res.render("dashboard", {
-      username: user.username,
-      email: user.email,
-      gender: formatGender(profile.gender),
-      age: profile.age,
-      weight: profile.weight,
-      height: profile.height,
-      bmi: bmi,
-    });
+    const today = new Date().toISOString().slice(0, 10);
+
+    db.get(
+      "SELECT SUM(estimated_steps) AS total_steps FROM steps WHERE user_id = ? AND date = ?",
+      [userId, today],
+      (err, stepsData) => {
+        if (err) return res.status(500).send("Error loading dashboard");
+
+        db.get(
+          "SELECT SUM(calories) AS total_calories FROM food_Entries WHERE user_id = ? AND date = ?",
+          [userId, today],
+          (err2, calorieData) => {
+            if (err2) return res.status(500).send("Error loading dashboard");
+
+            db.get(
+              "SELECT * FROM workout_logs WHERE user_id = ? AND date = ?",
+              [userId, today],
+              (err3, workout) => {
+                if (err3) return res.status(500).send("Error loading dashboard");
+
+                res.render("dashboard", {
+                  username: user.username,
+                  email: user.email,
+                  gender: formatGender(profile.gender),
+                  age: profile.age,
+                  weight: profile.weight,
+                  height: profile.height,
+                  bmi: bmi,
+                  totalSteps: stepsData?.total_steps || 0,
+                  totalCalories: calorieData?.total_calories || 0,
+                  workout: workout || null
+                });
+              }
+            );
+          }
+        );
+      }
+    );
   } catch (error) {
     console.error(error);
     res.redirect("/login.html");
@@ -457,10 +491,31 @@ app.post("/exercise/delete/:id", (req, res) => {
        AND workout_id IN (SELECT id FROM workout_logs WHERE user_id = ?)`,
     [entryId, userId],
     (err) => {
-      if (err)
-        return res.status(500).send("There was an error deleting exercise");
-      return res.redirect(`/workout/${workoutId}`);
-    },
+      if (err) return res.status(500).send("There was an error deleting exercise");
+      
+      // check if any exercises are left in this workout
+      db.get(
+        "SELECT COUNT(*) AS count FROM exercise_entries WHERE workout_id = ?",
+        [workoutId],
+        (err2, row) => {
+          if (err2) return res.status(500).send("Error checking exercises");
+          
+          // if no exercises left, delete the workout log too
+          if (row.count === 0) {
+            db.run(
+              "DELETE FROM workout_logs WHERE id = ? AND user_id = ?",
+              [workoutId, userId],
+              (err3) => {
+                if (err3) return res.status(500).send("Error deleting workout");
+                return res.redirect("/fitness");
+              }
+            );
+          } else {
+            return res.redirect(`/workout/${workoutId}`);
+          }
+        }
+      );
+    }
   );
 });
 
