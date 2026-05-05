@@ -7,14 +7,15 @@
   </head>
 
   <body>
-  <nav class="navbar">
-    <ul class="navbar-links">
-      <li><a href="/dashboard">Dashboard</a></li>
-      <li><a href="/fitness">Fitness</a></li>
-      <li><a href="/diet">Diet</a></li>
-      <li><a href="/goals">Goals</a></li>
-    </ul>
-  </nav>
+    <div class="container wide">
+      <nav class="navbar">
+        <ul class="navbar-links">
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/fitness">Fitness</a></li>
+          <li><a href="/diet">Diet</a></li>
+          <li><a href="/goals">Goals</a></li>
+        </ul>
+      </nav>
 
       <h2><%= username || "User" %></h2>
       <p><%= typeof email !== 'undefined' ? email : 'No email' %></p>
