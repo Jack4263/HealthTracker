@@ -1,40 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Fitness</title>
-  <link rel="stylesheet" href="/styles.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fitness</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
 
-<body>
-  <div class="container wide">
-  <nav class="navbar">
-      <ul class="navbar-links">
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/fitness">Fitness</a></li>
-        <li><a href="/diet">Diet</a></li>
-      </ul>
-    </nav>
-  <h1>Fitness</h1>
+  <body>
+    <div class="container wide">
+      <nav class="navbar">
+        <ul class="navbar-links">
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/fitness">Fitness</a></li>
+          <li><a href="/diet">Diet</a></li>
+        </ul>
+      </nav>
 
-  <h2>Steps</h2>
-  <p>
-    <% if (typeof steps !== "undefined") { %>
-      You have walked <%= steps %> steps today.
-    <% } else { %>
-      No step data available.
-    <% } %>
-  </p>
+      <h1>Fitness</h1>
 
-  <div>
-    <a href="/workout/new">
-      <button>Log Workout</button>
-    </a>
+      <div class="steps-container">
+        <div class="steps-circle">
+          <div class="steps-number">
+            <%= typeof steps !== "undefined" ? steps : 0 %>
+          </div>
+          <div class="steps-label">steps</div>
+        </div>
+      </div>
 
-    <a href="/steps">
-      <button>Log Steps</button>
-    </a>
-  </div>
+      <div class="actions">
+        <a href="/workout/new">
+          <button>Log Workout</button>
+        </a>
 
-</body>
+        <a href="/steps">
+          <button>Log Steps</button>
+        </a>
+      </div>
+    </div>
+  </body>
 </html>

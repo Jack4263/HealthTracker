@@ -17,6 +17,16 @@ app.use(
   }),
 );
 
+
+// fixes for sqlite3 callback functions to return promises for easier async/await usage
+const dbGet = (sql, params) =>
+  new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+
 // DATABASE CREATION AND FUNCTIONS ------
 db.run(
   "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT UNIQUE, password TEXT)",
@@ -221,12 +231,13 @@ app.get("/logout", (req, res) => {
 
 app.get("/fitness", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
+
   const userId = req.session.userId;
   const today = new Date().toISOString().slice(0, 10);
-
   db.get(
-    "SELECT * FROM steps WHERE user_id = ? AND date = ?", 
-    [userId, today], (err, stepsData) => {
+    "SELECT SUM(estimated_steps) AS total FROM steps WHERE user_id = ? AND date = ?",
+    [userId, today],
+    (err, stepsData) => {
       if (err) return res.status(500).send("Error loading fitness page");
 
       db.get(
@@ -235,14 +246,63 @@ app.get("/fitness", (req, res) => {
         (err2, workout) => {
           if (err2) return res.status(500).send("Error loading fitness page");
 
-         res.render("fitness", {
-           steps: stepsData ? stepsData.estimated_steps : null,
-           workout: workout || null
-         });
-       });
-    });
-  });
+          res.render("fitness", {
+            steps: stepsData?.total || 0,
+            workout: workout || null,
+          });
+        },
+      );
+    },
+  );
+});
+//steps route
 
+app.get("/steps", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  res.render("steps", {
+    steps: { date: today },
+  });
+});
+
+app.post("/steps", async (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+  const distance = parseFloat(req.body.distance);
+
+  if (isNaN(distance) || distance <= 0) {
+    return res.status(400).send("Invalid distance");
+  }
+
+  try {
+    const row = await dbGet(
+      "SELECT height FROM user_profiles WHERE user_id = ?",
+      [userId],
+    );
+
+    const height = row?.height ? row.height / 100 : 1.8;
+    const estimatedSteps = Math.round(distance / (height * 0.415));
+
+    db.run(
+      `INSERT INTO steps(user_id, date, distance, estimated_steps)
+       VALUES (?, ?, ?, ?)`,
+      [userId, today, distance, estimatedSteps],
+      (err) => {
+        if (err) return res.status(500).send("Error logging steps");
+        res.redirect("/fitness");
+      },
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
+//workout route
 app.get("/workout/new", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const userId = req.session.userId;
@@ -313,75 +373,74 @@ app.post("/exercise", (req, res) => {
     },
   );
 });
+
 // diet route
 app.get("/diet", (req, res) => {
   res.render("diet", {
     total_calories: null,
-    date: null
+    date: null,
   });
 });
 
 app.post("/add-food", (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
-  const {food_name, calories, date} = req.body;
+  const { food_name, calories, date } = req.body;
   const userid = req.session.userId;
-  console.log("running food entry")
+  console.log("running food entry");
   db.run(
     "INSERT INTO food_entries (user_id, food_name, date, calories) VALUES (?, ?, ?, ?)",
     [userid, food_name, date, calories],
     (err) => {
-      if(err){
-          console.error(err);
-      }else{
+      if (err) {
+        console.error(err);
+      } else {
         console.log("Food entry added");
-        res.redirect("/diet")
+        res.redirect("/diet");
       }
-    }
+    },
   );
 });
 app.post("/add-log", (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
-  const {date, total_calories, calorie_goal} = req.body;
+  const { date, total_calories, calorie_goal } = req.body;
   const userid = req.session.userId;
   const achieved = total_calories <= calorie_goal ? 1 : 0;
-  console.log("running diet log")
+  console.log("running diet log");
   db.run(
     "INSERT INTO diet_logs(user_id, date, total_calories, calorie_goal, achieved) VALUES (?, ?, ?, ?, ?)",
     [userid, date, total_calories, calorie_goal, achieved],
     (err) => {
-      if(err){
+      if (err) {
         console.error(err);
-      }else{
+      } else {
         console.log("Diet Log added");
-        res.redirect("/diet")
+        res.redirect("/diet");
       }
-    }
+    },
   );
 });
 app.get("/daily-calories", (req, res) => {
   const userid = req.session.userId;
   const date = req.query.date;
-    if (!date) {
+  if (!date) {
     return res.render("diet", { total: null });
   }
-  console.log("Running daily calories")
+  console.log("Running daily calories");
   db.get(
     `SELECT SUM(calories) AS daily_calories
     FROM food_Entries
     WHERE user_id = ? AND date = ?`,
     [userid, date],
     (err, row) => {
-      if(err){
+      if (err) {
         console.error(err);
-        res.send("Error")
+        res.send("Error");
       }
       res.render("diet", {
         date,
-        total_calories: row?.calories || 0
+        total_calories: row?.calories || 0,
       });
-      
-    }
-
+    },
   );
 });
 
