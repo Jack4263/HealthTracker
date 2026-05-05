@@ -49,6 +49,9 @@ db.run(
 db.run(
   "CREATE TABLE IF NOT EXISTS diet_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, total_calories REAL, calorie_goal REAL, achieved INTEGER CHECK(achieved IN (0, 1)), FOREIGN KEY(user_id) REFERENCES users(id))",
 );
+db.run(
+  "CREATE TABLE IF NOT EXISTS goals(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, goal_type TEXT NOT NULL, target_value REAL NOT NULL, target_date TEXT NOT NULL, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))"
+);
 // function to check if user exists already (for signup)
 function userExists(username, email) {
   return new Promise((resolve, reject) => {
@@ -405,6 +408,119 @@ app.post("/exercise", (req, res) => {
         },
       );
     },
+  );
+});
+
+
+// goals
+app.get("/goals", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+
+  db.all(
+    "SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC",
+    [userId],
+    async (err, goals) => {
+      if (err) return res.status(500).send("Error loading goals");
+
+      for (const goal of goals) {
+        if (goal.status === "completed" || goal.status === "archived") continue;
+
+        let currentValue = null;
+
+        if (goal.goal_type === "weight") {
+          const row = await dbGet(
+            "SELECT weight FROM user_profiles WHERE user_id = ?",
+            [userId]
+          );
+          currentValue = row?.weight || null;
+        } else if (goal.goal_type === "steps") {
+          const row = await dbGet(
+            "SELECT SUM(estimated_steps) AS total FROM steps WHERE user_id = ? AND date = ?",
+            [userId, today]
+          );
+          currentValue = row?.total || 0;
+        } else if (goal.goal_type === "calories") {
+          const row = await dbGet(
+            "SELECT SUM(calories) AS total FROM food_Entries WHERE user_id = ? AND date = ?",
+            [userId, today]
+          );
+          currentValue = row?.total || 0;
+        }
+
+        if (goal.target_date < today && goal.status === "active") {
+          db.run("UPDATE goals SET status = 'overdue' WHERE id = ?", [goal.id]);
+          goal.status = "overdue";
+        }
+
+        // checks if its completed
+        if (currentValue !== null) {
+          let completed = false;
+          if (goal.goal_type === "weight" && currentValue <= goal.target_value) completed = true;
+          if (goal.goal_type === "steps" && currentValue >= goal.target_value) completed = true;
+          if (goal.goal_type === "calories" && currentValue <= goal.target_value) completed = true;
+
+          if (completed && goal.status !== "overdue") {
+            db.run("UPDATE goals SET status = 'completed' WHERE id = ?", [goal.id]);
+            goal.status = "completed";
+          }
+        }
+
+        goal.currentValue = currentValue;
+      }
+
+      res.render("goals", { goals, today });
+    }
+  );
+});
+
+app.post("/goals/add", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const { goal_type, target_value, target_date } = req.body;
+
+  if (!goal_type || !target_value || !target_date) {
+    return res.status(400).send("All fields are required");
+  }
+
+  db.run(
+    "INSERT INTO goals(user_id, goal_type, target_value, target_date) VALUES (?, ?, ?, ?)",
+    [userId, goal_type, target_value, target_date],
+    (err) => {
+      if (err) return res.status(500).send("Error saving goal");
+      res.redirect("/goals");
+    }
+  );
+});
+
+app.post("/goals/delete/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const goalId = req.params.id;
+
+  db.run(
+    "DELETE FROM goals WHERE id = ? AND user_id = ?",
+    [goalId, userId],
+    (err) => {
+      if (err) return res.status(500).send("Error deleting goal");
+      res.redirect("/goals");
+    }
+  );
+});
+
+app.post("/goals/archive/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const goalId = req.params.id;
+
+  db.run(
+    "UPDATE goals SET status = 'archived' WHERE id = ? AND user_id = ?",
+    [goalId, userId],
+    (err) => {
+      if (err) return res.status(500).send("Error archiving goal");
+      res.redirect("/goals");
+    }
   );
 });
 
