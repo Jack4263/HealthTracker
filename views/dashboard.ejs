@@ -28,8 +28,8 @@
       <label>Age: <%= age %></label>
       <label>Weight: <%= weight %> kg</label>
       <label>Height: <%= height %> cm</label>
-      <label>BMI: <%= bmi %> — 
-        <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %>
+      <label class="bmi-label <%= bmi < 18.5 ? 'bmi-underweight' : bmi < 25 ? 'bmi-healthy' : bmi < 30 ? 'bmi-overweight' : 'bmi-obese' %>">
+        BMI: <%= bmi %> — <%= bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy" : bmi < 30 ? "Overweight" : "Obese" %>
       </label>
       <hr>
 
