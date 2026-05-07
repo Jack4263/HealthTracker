@@ -17,6 +17,15 @@ app.use(
   }),
 );
 
+// fixes for sqlite3 callback functions to return promises for easier async/await usage
+const dbGet = (sql, params) =>
+  new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+
 // DATABASE CREATION AND FUNCTIONS ------
 db.run(
   "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT UNIQUE, password TEXT)",
@@ -38,6 +47,9 @@ db.run(
 );
 db.run(
   "CREATE TABLE IF NOT EXISTS diet_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, total_calories REAL, calorie_goal REAL, achieved INTEGER CHECK(achieved IN (0, 1)), FOREIGN KEY(user_id) REFERENCES users(id))",
+);
+db.run(
+  "CREATE TABLE IF NOT EXISTS goals(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, goal_type TEXT NOT NULL, target_value REAL NOT NULL, target_date TEXT NOT NULL, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
 // function to check if user exists already (for signup)
 function userExists(username, email) {
@@ -137,6 +149,9 @@ app.post("/login", async (req, res) => {
           weight: profile.weight,
           height: profile.height,
           bmi: bmi,
+          totalSteps: 0,
+          totalCalories: 0,
+          workout: null,
         });
       } catch (err) {
         console.error(err);
@@ -150,16 +165,20 @@ app.post("/login", async (req, res) => {
 app.post("/set_up_profile", async (req, res) => {
   const { gender, age, weight, height } = req.body;
   const userId = req.session.userId;
+
   try {
     const query =
       "INSERT INTO user_profiles(user_id, gender, age, weight, height) VALUES (?, ?, ?, ?, ?)";
+
     db.run(query, [userId, gender, age, weight, height], async function (err) {
       if (err) {
         console.error(err);
         return res.status(500).send("Error setting up profile.");
       }
+
       const { user, profile } = await getUserWithProfile(userId);
       const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
+
       res.render("dashboard", {
         username: user.username,
         email: user.email,
@@ -168,6 +187,9 @@ app.post("/set_up_profile", async (req, res) => {
         weight: profile.weight,
         height: profile.height,
         bmi: bmi,
+        totalSteps: 0,
+        totalCalories: 0,
+        workout: null,
       });
     });
   } catch (error) {
@@ -184,16 +206,48 @@ app.get("/dashboard", async (req, res) => {
   }
   try {
     const { user, profile } = await getUserWithProfile(userId);
+    if (!profile) return res.redirect("/set_up_profiles");
+
     const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
-    res.render("dashboard", {
-      username: user.username,
-      email: user.email,
-      gender: formatGender(profile.gender),
-      age: profile.age,
-      weight: profile.weight,
-      height: profile.height,
-      bmi: bmi,
-    });
+    const today = new Date().toISOString().slice(0, 10);
+
+    db.get(
+      "SELECT SUM(estimated_steps) AS total_steps FROM steps WHERE user_id = ? AND date = ?",
+      [userId, today],
+      (err, stepsData) => {
+        if (err) return res.status(500).send("Error loading dashboard");
+
+        db.get(
+          "SELECT SUM(calories) AS total_calories FROM food_Entries WHERE user_id = ? AND date = ?",
+          [userId, today],
+          (err2, calorieData) => {
+            if (err2) return res.status(500).send("Error loading dashboard");
+
+            db.get(
+              "SELECT * FROM workout_logs WHERE user_id = ? AND date = ?",
+              [userId, today],
+              (err3, workout) => {
+                if (err3)
+                  return res.status(500).send("Error loading dashboard");
+
+                res.render("dashboard", {
+                  username: user.username,
+                  email: user.email,
+                  gender: formatGender(profile.gender),
+                  age: profile.age,
+                  weight: profile.weight,
+                  height: profile.height,
+                  bmi: bmi,
+                  totalSteps: stepsData?.total_steps || 0,
+                  totalCalories: calorieData?.total_calories || 0,
+                  workout: workout || null,
+                });
+              },
+            );
+          },
+        );
+      },
+    );
   } catch (error) {
     console.error(error);
     res.redirect("/login.html");
@@ -221,12 +275,13 @@ app.get("/logout", (req, res) => {
 
 app.get("/fitness", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
+
   const userId = req.session.userId;
   const today = new Date().toISOString().slice(0, 10);
-
   db.get(
-    "SELECT * FROM steps WHERE user_id = ? AND date = ?", 
-    [userId, today], (err, stepsData) => {
+    "SELECT SUM(estimated_steps) AS total FROM steps WHERE user_id = ? AND date = ?",
+    [userId, today],
+    (err, stepsData) => {
       if (err) return res.status(500).send("Error loading fitness page");
 
       db.get(
@@ -235,14 +290,63 @@ app.get("/fitness", (req, res) => {
         (err2, workout) => {
           if (err2) return res.status(500).send("Error loading fitness page");
 
-         res.render("fitness", {
-           steps: stepsData ? stepsData.estimated_steps : null,
-           workout: workout || null
-         });
-       });
-    });
-  });
+          res.render("fitness", {
+            steps: stepsData?.total || 0,
+            workout: workout || null,
+          });
+        },
+      );
+    },
+  );
+});
+//steps route
 
+app.get("/steps", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  res.render("steps", {
+    steps: { date: today },
+  });
+});
+
+app.post("/steps", async (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+  const distance = parseFloat(req.body.distance);
+
+  if (isNaN(distance) || distance <= 0) {
+    return res.status(400).send("Invalid distance");
+  }
+
+  try {
+    const row = await dbGet(
+      "SELECT height FROM user_profiles WHERE user_id = ?",
+      [userId],
+    );
+
+    const height = row?.height ? row.height / 100 : 1.8;
+    const estimatedSteps = Math.round(distance / (height * 0.415));
+
+    db.run(
+      `INSERT INTO steps(user_id, date, distance, estimated_steps)
+       VALUES (?, ?, ?, ?)`,
+      [userId, today, distance, estimatedSteps],
+      (err) => {
+        if (err) return res.status(500).send("Error logging steps");
+        res.redirect("/fitness");
+      },
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
+//workout route
 app.get("/workout/new", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const userId = req.session.userId;
@@ -313,75 +417,194 @@ app.post("/exercise", (req, res) => {
     },
   );
 });
+
+// goals
+app.get("/goals", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+
+  db.all(
+    "SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC",
+    [userId],
+    async (err, goals) => {
+      if (err) return res.status(500).send("Error loading goals");
+
+      for (const goal of goals) {
+        if (goal.status === "completed" || goal.status === "archived") continue;
+
+        let currentValue = null;
+
+        if (goal.goal_type === "weight") {
+          const row = await dbGet(
+            "SELECT weight FROM user_profiles WHERE user_id = ?",
+            [userId],
+          );
+          currentValue = row?.weight || null;
+        } else if (goal.goal_type === "steps") {
+          const row = await dbGet(
+            "SELECT SUM(estimated_steps) AS total FROM steps WHERE user_id = ? AND date = ?",
+            [userId, today],
+          );
+          currentValue = row?.total || 0;
+        } else if (goal.goal_type === "calories") {
+          const row = await dbGet(
+            "SELECT SUM(calories) AS total FROM food_Entries WHERE user_id = ? AND date = ?",
+            [userId, today],
+          );
+          currentValue = row?.total || 0;
+        }
+
+        if (goal.target_date < today && goal.status === "active") {
+          db.run("UPDATE goals SET status = 'overdue' WHERE id = ?", [goal.id]);
+          goal.status = "overdue";
+        }
+
+        // checks if its completed
+        if (currentValue !== null) {
+          let completed = false;
+          if (goal.goal_type === "weight" && currentValue <= goal.target_value)
+            completed = true;
+          if (goal.goal_type === "steps" && currentValue >= goal.target_value)
+            completed = true;
+          if (
+            goal.goal_type === "calories" &&
+            currentValue <= goal.target_value
+          )
+            completed = true;
+
+          if (completed && goal.status !== "overdue") {
+            db.run("UPDATE goals SET status = 'completed' WHERE id = ?", [
+              goal.id,
+            ]);
+            goal.status = "completed";
+          }
+        }
+
+        goal.currentValue = currentValue;
+      }
+
+      res.render("goals", { goals, today });
+    },
+  );
+});
+
+app.post("/goals/add", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const { goal_type, target_value, target_date } = req.body;
+
+  if (!goal_type || !target_value || !target_date) {
+    return res.status(400).send("All fields are required");
+  }
+
+  db.run(
+    "INSERT INTO goals(user_id, goal_type, target_value, target_date) VALUES (?, ?, ?, ?)",
+    [userId, goal_type, target_value, target_date],
+    (err) => {
+      if (err) return res.status(500).send("Error saving goal");
+      res.redirect("/goals");
+    },
+  );
+});
+
+app.post("/goals/delete/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const goalId = req.params.id;
+
+  db.run(
+    "DELETE FROM goals WHERE id = ? AND user_id = ?",
+    [goalId, userId],
+    (err) => {
+      if (err) return res.status(500).send("Error deleting goal");
+      res.redirect("/goals");
+    },
+  );
+});
+
+app.post("/goals/archive/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const userId = req.session.userId;
+  const goalId = req.params.id;
+
+  db.run(
+    "UPDATE goals SET status = 'archived' WHERE id = ? AND user_id = ?",
+    [goalId, userId],
+    (err) => {
+      if (err) return res.status(500).send("Error archiving goal");
+      res.redirect("/goals");
+    },
+  );
+});
+
 // diet route
 app.get("/diet", (req, res) => {
   res.render("diet", {
     total_calories: null,
-    date: null
+    date: null,
   });
 });
 
 app.post("/add-food", (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
-  const {food_name, calories, date} = req.body;
+  const { food_name, calories, date } = req.body;
   const userid = req.session.userId;
-  console.log("running food entry")
+  console.log("running food entry");
   db.run(
     "INSERT INTO food_entries (user_id, food_name, date, calories) VALUES (?, ?, ?, ?)",
     [userid, food_name, date, calories],
     (err) => {
-      if(err){
-          console.error(err);
-      }else{
+      if (err) {
+        console.error(err);
+      } else {
         console.log("Food entry added");
-        res.redirect("/diet")
+        res.redirect("/diet");
       }
-    }
+    },
   );
 });
 app.post("/add-log", (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
-  const {date, total_calories, calorie_goal} = req.body;
+  const { date, total_calories, calorie_goal } = req.body;
   const userid = req.session.userId;
   const achieved = total_calories <= calorie_goal ? 1 : 0;
-  console.log("running diet log")
+  console.log("running diet log");
   db.run(
     "INSERT INTO diet_logs(user_id, date, total_calories, calorie_goal, achieved) VALUES (?, ?, ?, ?, ?)",
     [userid, date, total_calories, calorie_goal, achieved],
     (err) => {
-      if(err){
+      if (err) {
         console.error(err);
-      }else{
+      } else {
         console.log("Diet Log added");
-        res.redirect("/diet")
+        res.redirect("/diet");
       }
-    }
+    },
   );
 });
 app.get("/daily-calories", (req, res) => {
   const userid = req.session.userId;
   const date = req.query.date;
-    if (!date) {
+  if (!date) {
     return res.render("diet", { total: null });
   }
-  console.log("Running daily calories")
+  console.log("Running daily calories");
   db.get(
     `SELECT SUM(calories) AS daily_calories
     FROM food_Entries
     WHERE user_id = ? AND date = ?`,
     [userid, date],
     (err, row) => {
-      if(err){
+      if (err) {
         console.error(err);
-        res.send("Error")
+        res.send("Error");
       }
       res.render("diet", {
         date,
-        total_calories: row?.daily_calories || 0
+        total_calories: row?.calories || 0,
       });
-      
-    }
-
+    },
   );
 });
 
@@ -400,7 +623,65 @@ app.post("/exercise/delete/:id", (req, res) => {
     (err) => {
       if (err)
         return res.status(500).send("There was an error deleting exercise");
-      return res.redirect(`/workout/${workoutId}`);
+
+      // check if any exercises are left in this workout
+      db.get(
+        "SELECT COUNT(*) AS count FROM exercise_entries WHERE workout_id = ?",
+        [workoutId],
+        (err2, row) => {
+          if (err2) return res.status(500).send("Error checking exercises");
+
+          // if no exercises left, delete the workout log too
+          if (row.count === 0) {
+            db.run(
+              "DELETE FROM workout_logs WHERE id = ? AND user_id = ?",
+              [workoutId, userId],
+              (err3) => {
+                if (err3) return res.status(500).send("Error deleting workout");
+                return res.redirect("/fitness");
+              },
+            );
+          } else {
+            return res.redirect(`/workout/${workoutId}`);
+          }
+        },
+      );
+    },
+  );
+});
+
+app.get("/profile", async (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  try {
+    const { user, profile } = await getUserWithProfile(req.session.userId);
+    res.render("profile", {
+      username: user.username,
+      email: user.email,
+      gender: profile.gender,
+      age: profile.age,
+      weight: profile.weight,
+      height: profile.height,
+    });
+  } catch (error) {
+    console.error(error);
+    res.redirect("/dashboard");
+  }
+});
+
+app.post("/profile/update", async (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  const { gender, age, weight, height } = req.body;
+  const userId = req.session.userId;
+
+  db.run(
+    "UPDATE user_profiles SET gender = ?, age = ?, weight = ?, height = ? WHERE user_id = ?",
+    [gender, age, weight, height, userId],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error updating profile");
+      }
+      res.redirect("/profile");
     },
   );
 });

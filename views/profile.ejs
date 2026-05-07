@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Profile Settings</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <ul class="navbar-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/fitness">Fitness</a></li>
+        <li><a href="/diet">Diet</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <h1>Profile Settings</h1>
+      <hr>
+
+      <p><b>Username:</b> <%= username %></p>
+      <p><b>Email:</b> <%= email %></p>
+
+      <hr>
+
+      <h2>Edit Your Details</h2>
+      <form method="POST" action="/profile/update">
+        <label for="gender"><b>Gender</b></label>
+        <select id="gender" name="gender" required>
+          <option value="male" <%= gender === "male" ? "selected" : "" %>>Male</option>
+          <option value="female" <%= gender === "female" ? "selected" : "" %>>Female</option>
+          <option value="other" <%= gender === "other" ? "selected" : "" %>>Other</option>
+          <option value="prefer_not_to_say" <%= gender === "prefer_not_to_say" ? "selected" : "" %>>Prefer not to say</option>
+        </select>
+
+        <label for="age"><b>Age</b></label>
+        <input
+          id="age"
+          name="age"
+          type="number"
+          min="1"
+          value="<%= age %>"
+          required
+        />
+
+        <label for="weight"><b>Weight (kg)</b></label>
+        <input
+          id="weight"
+          name="weight"
+          type="number"
+          min="1"
+          step="0.1"
+          value="<%= weight %>"
+          required
+        />
+
+        <label for="height"><b>Height (cm)</b></label>
+        <input
+          id="height"
+          name="height"
+          type="number"
+          min="1"
+          step="0.1"
+          value="<%= height %>"
+          required
+        />
+
+        <button type="submit">Save Changes</button>
+      </form>
+
+      <hr>
+      <a href="/logout">Logout</a>
+    </div>
+  </body>
+</html>

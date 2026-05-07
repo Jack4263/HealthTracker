@@ -5,13 +5,15 @@
     <title>Workout</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
-
   <body>
     <div class="container wide">
     <nav class="navbar">
       <ul class="navbar-links">
         <li><a href="/dashboard">Dashboard</a></li>
         <li><a href="/fitness">Fitness</a></li>
+        <li><a href="/diet">Diet</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/profile">Profile</a></li>
       </ul>
     </nav>
     <h1>Workout</h1>
@@ -21,7 +23,6 @@
 
     <h2>Add Exercise</h2>
     <form method="POST" action="/exercise">
-      <!-- critical: this ties the exercise to the correct workout -->
       <input type="hidden" name="workout_id" value="<%= workout.id %>" />
 
       <div>
@@ -33,7 +34,6 @@
           required
         />
       </div>
-
       <div>
         <label for="sets"><b>Sets:</b></label><br />
         <input id="sets" name="sets" type="number" min="1"  />
@@ -45,9 +45,13 @@
       </div>
 
       <div>
-        <label for="weight"><b>Weight:</b></label><br />
+        <label for="weight"><b>Weight (kg) :</b></label><br />
         <input id="weight" name="weight" type="number" min="0" step="0.5" />
       </div>
+
+
+
+
 
       <br />
       <button type="submit">Add Exercise</button>

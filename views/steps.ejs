@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Steps</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+
+  <body>
+    <div class="container wide">
+    <nav class="navbar">
+      <ul class="navbar-links">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/fitness">Fitness</a></li>
+        <li><a href="/diet">Diet</a></li>
+        <li><a href="/goals">Goals</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+    </nav>
+    <h1>Step Tracker</h1>
+    <p><b>Date:</b> <%= steps.date %></p>
+
+    <hr />
+    
+    <h2>Add Steps</h2>
+    <form method="POST" action="/steps">
+      <input type="hidden" name="steps_id" value="<%= steps.id %>" />
+
+      <div>
+        <label for="distance"><b>Distance (meters):</b></label><br />
+        <input
+          id="distance"
+          name="distance"
+          type="text"
+          required
+        />
+      </div>
+
+      <div>
+        <label>(Steps are calculated via your recorded height and distance)</label><br />
+
+      </div>
+
+
+      <br />
+      <button type="submit">Log Steps</button>
+    </form>
+
+    <a href="/fitness">Back to Fitness</a>
+  </body>
+</html>
