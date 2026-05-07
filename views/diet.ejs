@@ -15,50 +15,52 @@
             <li><a href="/profile">Profile</a></li>
             </ul>
         </nav>
-        <h1>Diet Plan</h1>
-        <h2>Add food entry</h2>
-        <form method="POST" action="/add-food">
-            <div>
-                <label for="food_name"><b>Food name</b></label><br />
-                <input id ="food_name" name="food_name" type="text" required>
-            </div>
-            <div>
-                <label for="calories"><b>Calories</b></label><br />
-                <input id="calories" name="calories" type="number" min="1" required>
-            </div>
-            <div>
-                <label for="food_date"><b>Date</b></label><br />
-                <input id="food_date" name="date" type="date" required>
-            </div>
-            <br />
-            <button type="submit">Add food</button>
-        </form>
-        <h2>Add diet log</h2>
-        <form method="POST" action="/add-log">
-            <div>
-                <label for="log_date"><b>date</b></label><br />
-                <input id="log_date" name="date" type="date" required>
-            </div>
-            <div>
-                <label for="total_calories"><b>Total Calories</b></label><br />
-                <input id="total_calories" name="total_calories" type="number" required>
-            </div>
-            <div>
-                <label for="calorie_goal"><b>Calorie Goal</b></label><br />
-                <input id="calorie_goal" name="calorie_goal" type="number" required>
-            </div>
-            <br />
-            <button type="submit">Add diet log</button>
-        </form>
-        <form method="GET" action="/daily-calories">
-            <label for="calc_date"><b>date</b></label><br />
-            <input id="calc_date" name="date" type="date" required>
-            <button type="submit">Calculate daily calories</button>
-        </form>
-        <h2>Daily Calories</h2>
+        <div class="container wide">
+            <h1>Diet Plan</h1>
+            <h2>Add food entry</h2>
+            <form method="POST" action="/add-food">
+                <div>
+                    <label for="food_name"><b>Food name</b></label><br />
+                    <input id ="food_name" name="food_name" type="text" required>
+                </div>
+                <div>
+                    <label for="calories"><b>Calories</b></label><br />
+                    <input id="calories" name="calories" type="number" min="1" required>
+                </div>
+                <div>
+                    <label for="food_date"><b>Date</b></label><br />
+                    <input id="food_date" name="date" type="date" required>
+                </div>
+                <br />
+                <button type="submit">Add food</button>
+            </form>
+            <h2>Add diet log</h2>
+            <form method="POST" action="/add-log">
+                <div>
+                    <label for="log_date"><b>date</b></label><br />
+                    <input id="log_date" name="date" type="date" required>
+                </div>
+                <div>
+                    <label for="total_calories"><b>Total Calories</b></label><br />
+                    <input id="total_calories" name="total_calories" type="number" required>
+                </div>
+                <div>
+                    <label for="calorie_goal"><b>Calorie Goal</b></label><br />
+                    <input id="calorie_goal" name="calorie_goal" type="number" required>
+                </div>
+                <br />
+                <button type="submit">Add diet log</button>
+            </form>
+            <form method="GET" action="/daily-calories">
+                <label for="calc_date"><b>date</b></label><br />
+                <input id="calc_date" name="date" type="date" required>
+                <button type="submit">Calculate daily calories</button>
+            </form>
+            <h2>Daily Calories</h2>
 
-        <% if (total_calories !== null) { %>
-        <p>Calories for <%= calc_date %>: <b><%= total_calories %></b></p>
-        <% } %>
+            <% if (total_calories !== null) { %>
+            <p>Calories for <%= calc_date %>: <b><%= total_calories %></b></p>
+            <% } %>
+        </div>
     </body>
 </html>
