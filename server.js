@@ -607,6 +607,7 @@ app.get("/diet", (req, res) => {
   res.render("diet", {
     total_calories: null,
     date: null,
+    achieved: null,
   });
 });
 
@@ -614,7 +615,6 @@ app.post("/add-food", (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
   const { food_name, calories, date } = req.body;
   const userid = req.session.userId;
-  console.log("running food entry");
   db.run(
     "INSERT INTO food_entries (user_id, food_name, date, calories) VALUES (?, ?, ?, ?)",
     [userid, food_name, date, calories],
@@ -630,30 +630,45 @@ app.post("/add-food", (req, res) => {
 });
 app.post("/add-log", (req, res) => {
   if (!req.session.userId) return res.redirect("/login");
-  const { date, total_calories, calorie_goal } = req.body;
+  const { date, calorie_goal } = req.body;
   const userid = req.session.userId;
-  const achieved = total_calories <= calorie_goal ? 1 : 0;
-  console.log("running diet log");
-  db.run(
-    "INSERT INTO diet_logs(user_id, date, total_calories, calorie_goal, achieved) VALUES (?, ?, ?, ?, ?)",
-    [userid, date, total_calories, calorie_goal, achieved],
-    (err) => {
+  const calorieGoal = Number(calorie_goal);
+
+  db.get(
+    `SELECT SUM(calories) AS total_calories
+     FROM food_entries
+     WHERE user_id = ? AND date = ?`,
+    [userid, date],
+    (err, row) => {
       if (err) {
         console.error(err);
-      } else {
-        console.log("Diet Log added");
-        res.redirect("/diet");
+        return res.status(500).send("Error");
       }
-    },
+      const total_calories =  Number(row?.total_calories || 0);
+      const achieved = total_calories <= calorie_goal ? 1 : 0;
+      db.run(
+        "INSERT INTO diet_logs(user_id, date, total_calories, calorie_goal, achieved) VALUES (?, ?, ?, ?, ?)",
+        [userid, date, total_calories, calorie_goal, achieved],
+        (err) => {
+          if (err) {
+            console.error(err);
+          } else {
+            console.log("Diet Log added");
+            res.redirect("/diet");
+          }
+        }
+        );
+    }
   );
 });
 app.get("/daily-calories", (req, res) => {
   const userid = req.session.userId;
   const date = req.query.date;
+  const calorie_goal = Number(req.query.calorie_goal);
   if (!date) {
     return res.render("diet", { total: null });
   }
-  console.log("Running daily calories");
+
   db.get(
     `SELECT SUM(calories) AS daily_calories
     FROM food_Entries
@@ -662,13 +677,27 @@ app.get("/daily-calories", (req, res) => {
     (err, row) => {
       if (err) {
         console.error(err);
-        res.send("Error");
+        return res.status(500).send("Error");
       }
+      db.get(
+        `SELECT achieved
+         FROM diet_logs
+         WHERE user_id = ? AND date = ?`,
+        [userid, date],
+        (err2, logRow) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).send("Error");
+          }
+
       res.render("diet", {
         date,
-        total_calories: row?.calories || 0,
-      });
-    },
+        total_calories: row?.daily_calories || 0,
+        achieved: logRow?.achieved ?? null,
+          });
+        }
+      );
+    }
   );
 });
 

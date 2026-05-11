@@ -59,7 +59,14 @@
             <h2>Daily Calories</h2>
 
             <% if (total_calories !== null) { %>
-            <p>Calories for <%= calc_date %>: <b><%= total_calories %></b></p>
+            <p>Calories for <%= date %>: <b><%= total_calories %></b></p>
+            <% } %>
+            <% if (achieved === null) { %>
+            <p>--</p>
+            <% } else if (achieved) { %>
+            <p>Goal achieved: YES</p>
+            <% } else { %>
+            <p>Goal achieved: NO</p>
             <% } %>
         </div>
     </body>
