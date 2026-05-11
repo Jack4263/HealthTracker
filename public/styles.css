@@ -30,6 +30,26 @@ label {
   margin-top: 10px;
 }
 
+.bmi-healthy {
+  color: green;
+  font-weight: bold;
+}
+
+.bmi-underweight {
+  color: blue;
+  font-weight: bold;
+}
+
+.bmi-overweight {
+  color: orange;
+  font-weight: bold;
+}
+
+.bmi-obese {
+  color: darkred;
+  font-weight: bold;
+}
+
 input {
   width: 100%;
   padding: 10px;
