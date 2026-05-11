@@ -522,12 +522,32 @@ app.get("/goals", (req, res) => {
               goal.id,
             ]);
             goal.status = "completed";
+
+            const user = await dbGet(
+              "SELECT email, username FROM users WHERE id = ?",
+              [userId],
+            );
+
+            // when goal is achieved it obviously updates it within the table but now sends an email congratulating user
+            await resend.emails.send({
+              from: "onboarding@resend.dev",
+              to: user.email,
+              subject: "Goal Achieved!",
+              html: `
+              <h1>Congratulations ${user.username}!</h1>
+              <p>You achieved your ${goal.goal_type} goal.</p>
+              <p>
+                Target: ${goal.target_value}
+              </p>
+              <p>Keep up the great work!</p>
+              <br>
+              <p>Kind regards,</p>
+              <p><strong>HealthTracker Team</strong></p>`,
+            });
           }
         }
-
         goal.currentValue = currentValue;
       }
-
       res.render("goals", { goals, today });
     },
   );
