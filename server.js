@@ -2,6 +2,9 @@ const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const app = express();
+require("dotenv").config();
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 const db = new sqlite3.Database("HealthDB.db");
 const session = require("express-session");
 const { name } = require("ejs");
@@ -201,6 +204,39 @@ app.post("/set_up_profile", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
+  }
+});
+
+app.post("/marketing-opt-in", async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect("/login.html");
+  }
+  try {
+    const user = await dbGet("SELECT email, username FROM users WHERE id = ?", [
+      req.session.userId,
+    ]);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // email sending part
+
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: user.email,
+      subject: "HealthTracker Email Communications Enabled",
+      html: `
+        <h1>Hello ${user.username}</h1>
+        <p>You have successfully opted in to HealthTrackers Communications emails!</p>
+        <br>
+        <p>Kind regards,</p>
+        <p><strong>HealthTracker Team</strong></p>
+      `,
+    });
+    res.send("Email sent successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error sending email");
   }
 });
 
