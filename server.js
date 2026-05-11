@@ -54,6 +54,7 @@ db.run(
 db.run(
   "CREATE TABLE IF NOT EXISTS goals(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, goal_type TEXT NOT NULL, target_value REAL NOT NULL, target_date TEXT NOT NULL, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
+
 // function to check if user exists already (for signup)
 function userExists(username, email) {
   return new Promise((resolve, reject) => {
@@ -775,6 +776,18 @@ app.post("/profile/update", async (req, res) => {
         return res.status(500).send("Error updating profile");
       }
       res.redirect("/profile");
+    },
+  );
+});
+
+app.get("/set_up_profiles", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+  db.get(
+    "SELECT * FROM users WHERE id = ?",
+    [req.session.userId],
+    (err, user) => {
+      if (err) return res.status(500).send("Server error");
+      res.render("set_up_profiles", { username: user.username });
     },
   );
 });
