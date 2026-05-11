@@ -31,7 +31,7 @@ db.run(
   "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT UNIQUE, password TEXT)",
 );
 db.run(
-  "CREATE TABLE IF NOT EXISTS user_profiles(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, gender TEXT, weight REAL, height REAL, age INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))",
+  "CREATE TABLE IF NOT EXISTS user_profiles(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, name TEXT, gender TEXT, weight REAL, height REAL, age INTEGER, FOREIGN KEY(user_id) REFERENCES users(id))",
 );
 db.run(
   "CREATE TABLE IF NOT EXISTS workout_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, date TEXT NOT NULL, calories_burned REAL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))",
@@ -144,6 +144,7 @@ app.post("/login", async (req, res) => {
         res.render("dashboard", {
           username: fullUser.username,
           email: fullUser.email,
+          name: profile.name,
           gender: formatGender(profile.gender),
           age: profile.age,
           weight: profile.weight,
@@ -163,35 +164,40 @@ app.post("/login", async (req, res) => {
 
 // set up profile function
 app.post("/set_up_profile", async (req, res) => {
-  const { gender, age, weight, height } = req.body;
+  const { name, gender, age, weight, height } = req.body;
   const userId = req.session.userId;
 
   try {
     const query =
-      "INSERT INTO user_profiles(user_id, gender, age, weight, height) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO user_profiles(user_id, name, gender, age, weight, height) VALUES (?, ?, ?, ?, ?, ?)";
 
-    db.run(query, [userId, gender, age, weight, height], async function (err) {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Error setting up profile.");
-      }
+    db.run(
+      query,
+      [userId, name, gender, age, weight, height],
+      async function (err) {
+        if (err) {
+          console.error(err);
+          return res.status(500).send("Error setting up profile.");
+        }
 
-      const { user, profile } = await getUserWithProfile(userId);
-      const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
+        const { user, profile } = await getUserWithProfile(userId);
+        const bmi = (profile.weight / (profile.height / 100) ** 2).toFixed(1);
 
-      res.render("dashboard", {
-        username: user.username,
-        email: user.email,
-        gender: formatGender(profile.gender),
-        age: profile.age,
-        weight: profile.weight,
-        height: profile.height,
-        bmi: bmi,
-        totalSteps: 0,
-        totalCalories: 0,
-        workout: null,
-      });
-    });
+        res.render("dashboard", {
+          username: user.username,
+          email: user.email,
+          name: profile.name,
+          gender: formatGender(profile.gender),
+          age: profile.age,
+          weight: profile.weight,
+          height: profile.height,
+          bmi: bmi,
+          totalSteps: 0,
+          totalCalories: 0,
+          workout: null,
+        });
+      },
+    );
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
@@ -233,6 +239,7 @@ app.get("/dashboard", async (req, res) => {
                 res.render("dashboard", {
                   username: user.username,
                   email: user.email,
+                  name: profile.name,
                   gender: formatGender(profile.gender),
                   age: profile.age,
                   weight: profile.weight,
@@ -330,6 +337,7 @@ app.post("/steps", async (req, res) => {
 
     const height = row?.height ? row.height / 100 : 1.8;
     const estimatedSteps = Math.round(distance / (height * 0.415));
+    // converts height which currently in cm to meters then uses formula to est steps based on distance and height. 0.415 is an average step length
 
     db.run(
       `INSERT INTO steps(user_id, date, distance, estimated_steps)
@@ -361,8 +369,8 @@ app.get("/workout/new", (req, res) => {
       // if a workout already exists today it will reuse that one
       if (row) return res.redirect(`/workout/${row.id}`);
       db.run(
-        "INSERT INTO workout_logs(user_id, date, calories_burned) VALUES (?, ?, ?)",
-        [userId, today, null],
+        "INSERT INTO workout_logs(user_id, date) VALUES (?, ?)",
+        [userId, today],
         function (err2) {
           if (err2) return res.status(500).send("Error creating workout");
           return res.redirect(`/workout/${this.lastID}`);

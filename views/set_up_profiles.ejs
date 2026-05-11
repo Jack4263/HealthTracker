@@ -12,6 +12,15 @@
       <p>Fill in the information below to set up your profile.</p>
       <hr />
       <form action="/set_up_profile" method="post">
+        <label for="name"><b>Name</b></label>
+        <input
+          id="name"
+          type="text"
+          placeholder="Enter Name"
+          name="name"
+          required
+        />
+
         <label for="gender"><b>Gender</b></label>
         <select id="gender" name="gender" required>
           <option value="">Select Gender</option>
