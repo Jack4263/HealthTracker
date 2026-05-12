@@ -645,7 +645,7 @@ app.post("/add-log", (req, res) => {
         console.error(err);
         return res.status(500).send("Error");
       }
-      const total_calories =  Number(row?.total_calories || 0);
+      const total_calories = Number(row?.total_calories || 0);
       const achieved = total_calories <= calorie_goal ? 1 : 0;
       db.run(
         "INSERT INTO diet_logs(user_id, date, total_calories, calorie_goal, achieved) VALUES (?, ?, ?, ?, ?)",
@@ -657,12 +657,13 @@ app.post("/add-log", (req, res) => {
             console.log("Diet Log added");
             res.redirect("/diet");
           }
-        }
-        );
-    }
+        },
+      );
+    },
   );
 });
 app.get("/daily-calories", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
   const userid = req.session.userId;
   const date = req.query.date;
   const calorie_goal = Number(req.query.calorie_goal);
@@ -691,14 +692,14 @@ app.get("/daily-calories", (req, res) => {
             return res.status(500).send("Error");
           }
 
-      res.render("diet", {
-        date,
-        total_calories: row?.daily_calories || 0,
-        achieved: logRow?.achieved ?? null,
+          res.render("diet", {
+            date,
+            total_calories: row?.daily_calories || 0,
+            achieved: logRow?.achieved ?? null,
           });
-        }
+        },
       );
-    }
+    },
   );
 });
 
