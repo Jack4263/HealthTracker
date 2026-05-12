@@ -637,7 +637,7 @@ app.post("/add-log", (req, res) => {
 
   db.get(
     `SELECT SUM(calories) AS total_calories
-     FROM food_entries
+     FROM food_Entries
      WHERE user_id = ? AND date = ?`,
     [userid, date],
     (err, row) => {
