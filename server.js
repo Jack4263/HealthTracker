@@ -1,3 +1,4 @@
+// imports
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
@@ -68,7 +69,7 @@ function userExists(username, email) {
     });
   });
 }
-
+// helper function for retrieving user and profile
 function getUserWithProfile(userId) {
   return new Promise((resolve, reject) => {
     db.get("SELECT * FROM users WHERE id = ?", [userId], (err, user) => {
@@ -133,7 +134,7 @@ app.post("/login", async (req, res) => {
       }
       if (!user) return res.status(400).send("User not found");
 
-      // check password
+      // check password against hashed password
       const match = await bcrypt.compare(password, user.password);
       if (!match) return res.status(400).send("Incorrect password");
       req.session.userId = user.id;
@@ -208,40 +209,7 @@ app.post("/set_up_profile", async (req, res) => {
   }
 });
 
-app.post("/marketing-opt-in", async (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect("/login.html");
-  }
-  try {
-    const user = await dbGet("SELECT email, username FROM users WHERE id = ?", [
-      req.session.userId,
-    ]);
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-    // email sending part
-
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: user.email,
-      subject: "HealthTracker Email Communications Enabled",
-      html: `
-        <h1>Hello ${user.username}</h1>
-        <p>You have successfully opted in to HealthTrackers Communications emails!</p>
-        <br>
-        <p>Kind regards,</p>
-        <p><strong>HealthTracker Team</strong></p>
-      `,
-    });
-    res.send("Email sent successfully");
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error sending email");
-  }
-});
-
-// dashboard route
+// dashboard route with bmi and user info etc etc
 app.get("/dashboard", async (req, res) => {
   const userId = req.session.userId;
   if (!userId) {
@@ -315,7 +283,7 @@ app.get("/logout", (req, res) => {
   });
 });
 
-//fitness/workout/exercise routes
+//fitness -> workout -> exercise routes
 
 app.get("/fitness", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
@@ -343,6 +311,7 @@ app.get("/fitness", (req, res) => {
     },
   );
 });
+
 //steps route
 
 app.get("/steps", (req, res) => {
@@ -417,6 +386,7 @@ app.get("/workout/new", (req, res) => {
   );
 });
 
+// individual workout page with exercises
 app.get("/workout/:id", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const userId = req.session.userId;
@@ -440,6 +410,7 @@ app.get("/workout/:id", (req, res) => {
   );
 });
 
+// exercise page with button for steps and workout form
 app.post("/exercise", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const userId = req.session.userId;
@@ -463,7 +434,50 @@ app.post("/exercise", (req, res) => {
   );
 });
 
-// goals
+// allows exercise logs to be deleted
+app.post("/exercise/delete/:id", (req, res) => {
+  if (!req.session.userId) return res.redirect("/login.html");
+
+  const userId = req.session.userId;
+  const entryId = req.params.id;
+  const workoutId = req.body.workout_id;
+
+  db.run(
+    `DELETE FROM exercise_entries
+     WHERE id = ?
+       AND workout_id IN (SELECT id FROM workout_logs WHERE user_id = ?)`,
+    [entryId, userId],
+    (err) => {
+      if (err)
+        return res.status(500).send("There was an error deleting exercise");
+
+      // check if any exercises are left in this workout
+      db.get(
+        "SELECT COUNT(*) AS count FROM exercise_entries WHERE workout_id = ?",
+        [workoutId],
+        (err2, row) => {
+          if (err2) return res.status(500).send("Error checking exercises");
+
+          // if no exercises left, delete the workout log too
+          if (row.count === 0) {
+            db.run(
+              "DELETE FROM workout_logs WHERE id = ? AND user_id = ?",
+              [workoutId, userId],
+              (err3) => {
+                if (err3) return res.status(500).send("Error deleting workout");
+                return res.redirect("/fitness");
+              },
+            );
+          } else {
+            return res.redirect(`/workout/${workoutId}`);
+          }
+        },
+      );
+    },
+  );
+});
+
+// goals page - create and set goals, table displays goals currently going or achived etc
 app.get("/goals", (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   const userId = req.session.userId;
@@ -703,48 +717,7 @@ app.get("/daily-calories", (req, res) => {
   );
 });
 
-app.post("/exercise/delete/:id", (req, res) => {
-  if (!req.session.userId) return res.redirect("/login.html");
-
-  const userId = req.session.userId;
-  const entryId = req.params.id;
-  const workoutId = req.body.workout_id;
-
-  db.run(
-    `DELETE FROM exercise_entries
-     WHERE id = ?
-       AND workout_id IN (SELECT id FROM workout_logs WHERE user_id = ?)`,
-    [entryId, userId],
-    (err) => {
-      if (err)
-        return res.status(500).send("There was an error deleting exercise");
-
-      // check if any exercises are left in this workout
-      db.get(
-        "SELECT COUNT(*) AS count FROM exercise_entries WHERE workout_id = ?",
-        [workoutId],
-        (err2, row) => {
-          if (err2) return res.status(500).send("Error checking exercises");
-
-          // if no exercises left, delete the workout log too
-          if (row.count === 0) {
-            db.run(
-              "DELETE FROM workout_logs WHERE id = ? AND user_id = ?",
-              [workoutId, userId],
-              (err3) => {
-                if (err3) return res.status(500).send("Error deleting workout");
-                return res.redirect("/fitness");
-              },
-            );
-          } else {
-            return res.redirect(`/workout/${workoutId}`);
-          }
-        },
-      );
-    },
-  );
-});
-
+// profile page, change detaisl, enable emails as well
 app.get("/profile", async (req, res) => {
   if (!req.session.userId) return res.redirect("/login.html");
   try {
@@ -791,6 +764,40 @@ app.get("/set_up_profiles", (req, res) => {
       res.render("set_up_profiles", { username: user.username });
     },
   );
+});
+
+// marketing email opt in route
+app.post("/marketing-opt-in", async (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect("/login.html");
+  }
+  try {
+    const user = await dbGet("SELECT email, username FROM users WHERE id = ?", [
+      req.session.userId,
+    ]);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // email sending part
+
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: user.email,
+      subject: "HealthTracker Email Communications Enabled",
+      html: `
+        <h1>Hello ${user.username}</h1>
+        <p>You have successfully opted in to HealthTrackers Communications emails!</p>
+        <br>
+        <p>Kind regards,</p>
+        <p><strong>HealthTracker Team</strong></p>
+      `,
+    });
+    res.send("Email sent successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error sending email");
+  }
 });
 
 // starting server
